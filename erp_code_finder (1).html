@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ERP Code Finder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --bg: #F2F4F2;
+    --panel: #FFFFFF;
+    --ink: #1B2A28;
+    --ink-soft: #55645F;
+    --line: #DCE3DE;
+    --teal: #2C6E5F;
+    --teal-deep: #1E4E43;
+    --amber: #B9762F;
+    --red: #A73D3D;
+    --high-bg: #E4F0EA;
+    --med-bg: #F5EADA;
+    --low-bg: #F3E1DF;
+    --radius: 3px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;}
+
+  body{padding:36px 28px 80px;}
+
+  .wrap{max-width:980px;margin:0 auto;}
+
+  header{margin-bottom:28px;border-bottom:2px solid var(--ink);padding-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;}
+  h1{font-family:'Source Serif 4',serif;font-weight:700;font-size:28px;margin:0;letter-spacing:-0.01em;color:var(--ink);}
+  .sub{font-size:13.5px;color:var(--ink-soft);margin-top:6px;max-width:520px;line-height:1.5;}
+  .list-status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal-deep);background:var(--high-bg);padding:6px 10px;border-radius:var(--radius);white-space:nowrap;}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 24px;margin-bottom:20px;}
+  .panel h2{font-family:'Source Serif 4',serif;font-size:17px;margin:0 0 4px;font-weight:600;}
+  .panel .hint{font-size:12.5px;color:var(--ink-soft);margin:0 0 14px;line-height:1.5;}
+
+  textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;resize:vertical;background:#FAFBFA;color:var(--ink);}
+  textarea:focus{outline:none;border-color:var(--teal);}
+
+  .row{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap;}
+
+  button{font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;border:none;border-radius:var(--radius);padding:11px 20px;cursor:pointer;transition:background .15s ease;}
+  .btn-primary{background:var(--teal-deep);color:#fff;}
+  .btn-primary:hover{background:#163a32;}
+  .btn-secondary{background:transparent;color:var(--teal-deep);border:1px solid var(--teal-deep);}
+  .btn-secondary:hover{background:var(--high-bg);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);text-decoration:underline;padding:4px 0;font-size:12.5px;}
+
+  .count-tag{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);}
+
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px;}
+  thead th{text-align:left;font-size:11px;text-transform:none;letter-spacing:0.01em;color:var(--ink-soft);font-weight:600;border-bottom:1px solid var(--ink);padding:8px 10px;}
+  tbody td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:hover{background:#FAFBFA;}
+
+  .invoice-line{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);max-width:260px;word-break:break-word;}
+  .match-name{font-weight:500;}
+  .erp-code{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--teal-deep);}
+
+  .conf{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 7px;border-radius:2px;font-weight:600;}
+  .conf-high{background:var(--high-bg);color:var(--teal-deep);}
+  .conf-med{background:var(--med-bg);color:var(--amber);}
+  .conf-low{background:var(--low-bg);color:var(--red);}
+
+  select.alt{font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--line);border-radius:2px;padding:4px 6px;max-width:260px;background:#fff;color:var(--ink);}
+
+  .empty-state{padding:40px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+  .empty-state strong{color:var(--ink);}
+
+  details summary{cursor:pointer;font-size:13px;color:var(--teal-deep);font-weight:600;margin-bottom:10px;}
+  details[open] summary{margin-bottom:16px;}
+
+  .footer-note{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.6;}
+  .msg{font-size:12.5px;padding:8px 12px;border-radius:var(--radius);margin-top:10px;display:none;}
+  .msg.show{display:block;}
+  .msg-ok{background:var(--high-bg);color:var(--teal-deep);}
+  .msg-err{background:var(--low-bg);color:var(--red);}
+
+  @media (max-width:640px){
+    body{padding:24px 16px 60px;}
+    header{flex-direction:column;align-items:flex-start;}
+    .invoice-line{max-width:140px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>ERP Code Finder</h1>
+      <div class="sub">Paste product lines from an invoice below. Each line is matched against your ERP product list to find the closest code.</div>
+    </div>
+    <div class="list-status" id="listStatus">loading list…</div>
+  </header>
+
+  <div class="panel">
+    <h2>Invoice</h2>
+    <p class="hint">Upload the invoice — PDF, Excel, or CSV — and its item lines will be pulled out automatically. Or paste lines by hand below. Either way, review the list before matching; layouts vary and extraction won't always be perfect.</p>
+    <div class="row" style="margin-top:0;">
+      <label class="btn-secondary" style="display:inline-block;" id="pdfLabel">
+        Upload invoice (PDF, Excel or CSV)
+        <input type="file" id="pdfInput" accept=".pdf,.csv,.xlsx,.xls,application/pdf,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display:none;">
+      </label>
+      <span class="count-tag" id="pdfStatus"></span>
+    </div>
+    <div class="msg msg-err" id="pdfErr" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Invoice lines</h2>
+    <p class="hint">Paste one item per line — copy straight from the invoice, messy text is fine (extra quantities, pack sizes, supplier codes are ignored automatically). Extracted PDF lines will also appear here for you to review.</p>
+    <textarea id="invoiceInput" placeholder="WHLFCLS CREAM HEAVY WHIPPING 36% ESL
+WHLFCLS MILK HOMOGENIZED
+SYS CLS CHICKEN CVP THIGH BNLS SKLS
+SYS REL MANGO CHUNK IQF"></textarea>
+    <div class="row">
+      <button class="btn-primary" id="matchBtn">Find ERP codes</button>
+      <button class="btn-secondary" id="sampleBtn">Load this invoice's items</button>
+      <span class="count-tag" id="lineCount"></span>
+    </div>
+  </div>
+
+  <div class="panel" id="resultsPanel" style="display:none;">
+    <h2>Results</h2>
+    <p class="hint">Low-confidence matches are worth a quick check — use the dropdown to pick a different candidate if the top guess is wrong.</p>
+    <div class="row" style="margin-top:0;margin-bottom:8px;">
+      <button class="btn-secondary" id="copyBtn">Copy results (code + name)</button>
+      <button class="btn-secondary" id="downloadBtn">Download CSV</button>
+    </div>
+    <table id="resultsTable">
+      <thead>
+        <tr><th>Invoice line</th><th>Matched product</th><th>ERP code</th><th>Confidence</th></tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <div class="msg msg-ok" id="copyMsg">Copied to clipboard.</div>
+  </div>
+
+  <div class="panel">
+    <details id="updateDetails">
+      <summary>Update the ERP product list</summary>
+      <p class="hint">Paste rows as <span style="font-family:'IBM Plex Mono',monospace;">code, name</span> (one per line, comma or tab separated) to replace the list currently loaded. This is saved so it's still here next time you open this tool.</p>
+      <textarea id="listInput" style="min-height:110px;" placeholder="110010005, Smoky pine tea leaf
+18021, Cream Heavy Whipping 36% Extended Shelf Life"></textarea>
+      <div class="row">
+        <button class="btn-secondary" id="updateListBtn">Replace list</button>
+        <button class="btn-ghost" id="resetListBtn">Reset to original 724-item list</button>
+      </div>
+      <div class="msg msg-ok" id="listMsg"></div>
+      <div class="msg msg-err" id="listErr"></div>
+    </details>
+  </div>
+
+  <p class="footer-note">Matching is based on word and text similarity between the invoice line and each product name — it will not always be perfect, especially for near-identical products, so treat medium/low confidence rows as suggestions to verify, not final answers.</p>
+
+</div>
+
+<script id="erp-data" type="application/json">[{"code": "110010005", "name": "松烟小种（出口）", "spec": "50g/袋x10袋/包x10包/箱"}, {"code": "110010006", "name": "Smoky pine tea leaf", "spec": "50g/pc*10pcs/bag*30bag/ctn"}, {"code": "110010007", "name": "Black Tea (BIB)", "spec": "3L/bag×6bags/ctn"}, {"code": "110010027", "name": "1007B Honey Black Tea", "spec": "600g/bag x 30bag/ctn"}, {"code": "110011002", "name": "Green Tea (BIB)", "spec": "3L/bag×6bags/ctn"}, {"code": "110011012", "name": "Roasted Tea", "spec": "600g*20bag/ctn"}, {"code": "110011018", "name": "Jasmine Green Tea 1007", "spec": "600G*36bag/ctn"}, {"code": "110012006", "name": "鸭屎香乌龙茶 鲜萃液（太全定制）", "spec": "3kg/包*4包/箱"}, {"code": "110012008", "name": "单丛乌龙茶(出口) ", "spec": "25g/袋x20袋/包x30包/箱 "}, {"code": "110012009", "name": "Oolong Tea", "spec": "25g/pc*20pc/bag*30bags/ctn"}, {"code": "110012032", "name": "Black Tea", "spec": "600G*30bag/ctn"}, {"code": "110012033", "name": "Duck excrement fragrant oolong tea (Taiquan customized)", "spec": "300g/bag * 20 bags/box"}, {"code": "110016001", "name": "Matcha Powder", "spec": "500g*20bag/ctn"}, {"code": "110016005", "name": "Matcha Powder", "spec": "1kg*20bag/ctn"}, {"code": "110110014", "name": "Mango Syrup", "spec": "5kg*4bot/ctn"}, {"code": "110110015", "name": "Strawberry Syrup", "spec": "5kg*4bot/ctn"}, {"code": "110110016", "name": "Passionfruit Syrup", "spec": "5kg*4bot/ctn"}, {"code": "110110032", "name": "Grapefruit Syrup", "spec": "2.5kg x 6bottle/ctn"}, {"code": "110110034", "name": "Passionfruit Syrup", "spec": "2.5kg x 6bottle/ctn"}, {"code": "110110035", "name": "Lychee Syrup", "spec": "2.5kg x 6bottle/ctn"}, {"code": "110110038", "name": "Mango Syrup", "spec": "5kg x4bottle/ctn"}, {"code": "110110042", "name": "Passion fruit With Seed", "spec": "5kg/bot*4bottle/ctn"}, {"code": "110110043", "name": "Mix Berry Syrup", "spec": "2.5kg*6bottle/ctn"}, {"code": "110110044", "name": "Grape Flavor Syrup", "spec": "2.5kg*6bottle/ctn"}, {"code": "110110046", "name": "Strawberry Syrup", "spec": "2.5kg*6bottle/ctn"}, {"code": "110110069", "name": "Kumquat and lemon beverage thick pulp", "spec": "1.2kg/bottle * 12 bottles/carton"}, {"code": "110111005", "name": "荔枝汁(2.5kg x 6樽/箱)", "spec": "2.5kg x 6樽/箱"}, {"code": "110111031", "name": "Pineapple Pulp Syrup", "spec": "3kg*6bottle/ctn"}, {"code": "110111064", "name": "Wintermelon Syrup", "spec": "1.2kg*12bottle/ctn"}, {"code": "110113007", "name": "Logan Syrup #11", "spec": "3kg x10bottle/ctn"}, {"code": "110116001", "name": "Coconit Powder", "spec": "1lg*20bag/ctn"}, {"code": "110116009", "name": "Tea Topping Powder (Light)", "spec": "1kg*20bag/ctn"}, {"code": "110116031", "name": "Mousse Powder", "spec": "1kg*20bag/ctn"}, {"code": "110116033", "name": "Tea Topping Powder", "spec": "1kg*20bag/ctn"}, {"code": "110116034", "name": "Pudding Powder", "spec": "1kg*20bag/ctn"}, {"code": "110116036", "name": "Grass Jelly Powder", "spec": "1kg*20bag/ctn"}, {"code": "110116038", "name": "Mousse Premix Powder(Egg Flavor)", "spec": "1kg/bag*20bag/ctn"}, {"code": "110116039", "name": "Purple Sweet Potato Powder", "spec": "1kg/bag*12bag/ctn"}, {"code": "110116040", "name": "Tofu Powder(Bean Curd Powder)", "spec": "1kg*20bag/ctn"}, {"code": "110116046", "name": "Seaweed Powder", "spec": "1kg*20bag/ctn"}, {"code": "110116047", "name": "Soft Serve Mix Powder - Earl Gray Tea Fl", "spec": "1kg*20bag/ctn"}, {"code": "110116048", "name": "Soft Serve Mix Powder - Cocoa Flavor", "spec": "1kg*20bag/ctn"}, {"code": "110116049", "name": "Soft Serve Mix Powder-Taro Flavor", "spec": "1kg*20bag/ctn"}, {"code": "110116050", "name": "Soft Serve Mix Powder-Matcha Flavor", "spec": "1kg*20bag/ctn"}, {"code": "110116051", "name": "Soft Serve Mix Powder - Lemon Flavor", "spec": "1kg*20bag/ctn"}, {"code": "110116053", "name": "Sweet Diced Taro", "spec": "3.2kg*6can/ctn"}, {"code": "110116054", "name": "Wintermelon Tea Brick", "spec": "590g*10EA/bag, 5bags/ctn"}, {"code": "110210014", "name": "Grapefruit Sacs", "spec": "850g/can*12can/ctn"}, {"code": "110213006", "name": "3Q Pearls", "spec": "2kg/bag*6bag/ctn"}, {"code": "110213007", "name": "Aloe Vera", "spec": "3.1kg x6can/ctn"}, {"code": "110213008", "name": "Aloe Vera", "spec": "3.1kg/can*6can/ctn"}, {"code": "110213009", "name": "3Q Jelly Ball", "spec": "2kg x 6bag/ctn"}, {"code": "110213010", "name": "3Q Jelly Ball-Mango Flavor", "spec": "2kg x 6bag/ctn"}, {"code": "110213011", "name": "Nata De Coco", "spec": "4kg x4bottle/ctn"}, {"code": "110213023", "name": "Tapioca Pearl", "spec": "1kg/bag*20bags/ctn"}, {"code": "110213027", "name": "Lychee Coconut Jelly", "spec": "8.8lb x4bottle/ctn"}, {"code": "110213029", "name": "H Honey coconut (lychee flavor)", "spec": "4kg x4bottle/ctn"}, {"code": "110310009", "name": "Yogurt Syrup", "spec": "2.5kg x 6bottle/ctn"}, {"code": "110311002", "name": "Matcha Green Tea Powder", "spec": "1kg*20bag/ctn"}, {"code": "110311003", "name": "Taro Powder", "spec": "1kg*20bag/ctn"}, {"code": "110311005", "name": "Non-Dairy Creamer32A", "spec": "1kg*20bag/ctn"}, {"code": "110399003", "name": "Original Beverage Creamer", "spec": "1000mlx10bottle/ctn"}, {"code": "110410010", "name": "Coffee (BIB)", "spec": "3L/bag×6bags/ctn"}, {"code": "110411011", "name": "Cocoa Powder", "spec": "1kg*20bag/ctn"}, {"code": "110411012", "name": "Tiramisu Powder", "spec": "1kg*20bag/ctn"}, {"code": "110512005", "name": "OREO", "spec": "454g x 24bag/ctn"}, {"code": "110614009", "name": "Sweet Red Beans", "spec": "3.3kg*6can/ctn"}, {"code": "110615005", "name": "Bubble Waffle Powder", "spec": "1kg*20bag/ctn"}, {"code": "110615010", "name": "Jelly Cake Powder", "spec": "1kg*20bag/ctn"}, {"code": "110615020", "name": "Tapioca Pearl  9.5mm", "spec": "3kg/bag*6bag/ctn"}, {"code": "110615023", "name": "Taro Balls-Sweet Potato Flavor", "spec": "600g*20bag/ctn"}, {"code": "110615024", "name": "Taro Balls-Purple Sweet Potato Flavor", "spec": "600g*20bag/ctn"}, {"code": "110615026", "name": "Frozen Taro Balls", "spec": "600g*20bag/ctn"}, {"code": "110710002", "name": "Brown Sugar Syrup", "spec": "5kg*4bottle/ctn"}, {"code": "110710004", "name": "Brown Sugar Syrup", "spec": "4.3kg*6bottle/ctn"}, {"code": "110710005", "name": "Fructose F55(FL)", "spec": "2.5kg*6bottle/ctn"}, {"code": "110710008", "name": "Sugar Syrup", "spec": "5kg*4bottle/ctn"}, {"code": "110711002", "name": "Rock Salt", "spec": "280g x 100bag/ctn"}, {"code": "110713006", "name": "Fried Chicken Coating Powder", "spec": "1kg*20bag/ctn"}, {"code": "110713007", "name": "Fried Chicken Marinate Powder", "spec": "1kg*20bag/ctn"}, {"code": "110713008", "name": "Chili Seasoning Powder", "spec": "1kg*20bag/ctn"}, {"code": "110713009", "name": "Plum Flavor Seasoning Powder", "spec": "1kg*20bag/ctn"}, {"code": "110713010", "name": "Spicy Seasoning Powder", "spec": "1kg*20bag/ctn"}, {"code": "110713011", "name": "Mexican Style Seasoning Powder", "spec": "1kg*20bag/ctn"}, {"code": "110713012", "name": "Pepper Salt For Fried Chicken", "spec": "1kg/bag*25bags/ctn"}, {"code": "111011001", "name": "Striking Poping Candy - Strawberry Flavor", "spec": "1.5g*500pcs/bag*6bag/ctn"}, {"code": "111011002", "name": "Striking Poping Candy - Lychee Flavor", "spec": "1.5g*500pcs/bag*6bag/ctn"}, {"code": "111011003", "name": "Striking Poping Candy - Mango Flavor", "spec": "1.5g*500pcs/bag*6bag/ctn"}, {"code": "111012001", "name": "Plum", "spec": "500g x36bag/ctn"}, {"code": "111013001", "name": "Roasted Seasame Powder(black)", "spec": "300g/bag*12bags/ctn"}, {"code": "111110003", "name": "Light Brown Sugar Syrup", "spec": "gram"}, {"code": "120010006", "name": "Frozen Lemon Juice (V8T2) - 202507", "spec": "950g*20bottle/ctn"}, {"code": "120010021", "name": "Frozen Lime Kumquat Juice", "spec": "950g x20bottle/ctn"}, {"code": "120010025", "name": "Frozen Passion Fruit Juice", "spec": "960ml x 12bot/ctn"}, {"code": "120010026", "name": "Frozen Mango Juice", "spec": "960ml x 12bot/ctn"}, {"code": "120010027", "name": "Frozen Dragon Fruit Juice", "spec": "960ml x 12bot/ctn"}, {"code": "120010034", "name": "Frozen Lemon Juice 2023202", "spec": "950g*20bottle/ctn"}, {"code": "120013009", "name": "Frozen Mango Cube", "spec": "1000g x10bag/ctn"}, {"code": "120499001", "name": "Fried Fish Stick", "spec": "3kg/bag*6bag/ctn"}, {"code": "120499002", "name": "Fried Fish Cake", "spec": "3kg/bag*6bag/ctn"}, {"code": "120611006", "name": "Frozen Mango", "spec": "1/20lbs"}, {"code": "130212008", "name": "Liquid Creamer", "spec": "1L/Carton, 12 Cartons/Case"}, {"code": "130610001", "name": "Black Tea Base", "spec": "gram"}, {"code": "130610002", "name": "Jasmine Green Tea Base", "spec": "gram"}, {"code": "130610003", "name": "Milk Tea Base", "spec": "gram"}, {"code": "130611003", "name": "Salted Cheese", "spec": "gram"}, {"code": "18001", "name": "Salt Sea Fine", "spec": "12/26 OZ"}, {"code": "18002", "name": "Premium Creamer Box", "spec": "20bags/cs"}, {"code": "18003", "name": "Toddy Coffee- GROUND for DRIP", "spec": "1/5 LB"}, {"code": "18004", "name": "Streamline Espresso Blend per pound", "spec": "1/5 LB"}, {"code": "18005", "name": "Brown Sugar Cane", "spec": "1/25 LB"}, {"code": "18006", "name": "White Sugar Cane", "spec": "1/50 LB"}, {"code": "18007", "name": "Milk Sweetened Condensed Pouch", "spec": "3/140 OZ"}, {"code": "18008", "name": "Cookie Crumb Oreo Medium Crunch", "spec": "4/2.5 LB"}, {"code": "18009", "name": "Milk Condensed Sweetened Pouch", "spec": "3/140 OZ"}, {"code": "18010", "name": "Garlic Peeled Fresh", "spec": "4-pack, 5 LB"}, {"code": "18011", "name": "Chicken Thigh Boneless Skinless Controlled Vacuum Packed", "spec": "4-pack, 5 LB"}, {"code": "18012", "name": "Chicken CVP Wings 1st And 2nd Joints Jumbo", "spec": "4/10 LB"}, {"code": "18013", "name": "Vinegar White Distilled 50 Grain", "spec": "4/1 GAL"}, {"code": "18014", "name": "Vanilla Syrup for Coffee 25.4 Ounces for ", "spec": "1/25.4 OZ"}, {"code": "18015", "name": "Classic Caramel Syrup for Coffee 25.4 Ounces Coffee ", "spec": "1/25.4 OZ"}, {"code": "18016", "name": "Stella-Strawberry Syrup", "spec": "4 bottles/cs"}, {"code": "18017", "name": "Milk Soy Vanilla Silk Aseptic Prisma", "spec": "18/8 OZ"}, {"code": "18018", "name": "Kirkland Signature Organic Soy Non-Dairy Beverage, Original", "spec": "12 ct"}, {"code": "18019", "name": "Vegetable Oil", "spec": "6/1 GAL"}, {"code": "18021", "name": "Cream Heavy Whipping 36% Extended Shelf Life", "spec": "12/32 OZ"}, {"code": "18022", "name": "Milk Soy Barista Original", "spec": "12/32 OZ"}, {"code": "18023", "name": "Cream Heavy 40% Extended Shelf Life Stabilized", "spec": "12/32 OZ"}, {"code": "18024", "name": "Milk Homogenized", "spec": "2/1 GAL"}, {"code": "18025", "name": "Milk Oat Barista Plant Based", "spec": "12/32 OZ"}, {"code": "18026", "name": "Milk Soy Original Aseptic", "spec": "12/32 OZ"}, {"code": "18027", "name": "Milk Almond Extended Shelf Life", "spec": "6/64 oz"}, {"code": "18028", "name": "Milk Whole", "spec": "6/59 FLOZ"}, {"code": "18029", "name": "Cream Heavy 40% Ultra High Temperature", "spec": "6/.5 Gal"}, {"code": "18030", "name": "Nestle Coffee mate Original Powdered Coffee Creamer", "spec": "1/1 ea"}, {"code": "18031", "name": "FIJI Natural Artesian Water 16.9 fl. oz., 24 pk", "spec": "1/24 ct"}, {"code": "18032", "name": "Pure Life Purified Water 16.9 fl. oz., 40 pk", "spec": "1/40ct"}, {"code": "18033", "name": "Ghirardelli Sweet Ground Chocolate and Cocoa", "spec": "1/3 LB"}, {"code": "18034", "name": "Milk Condensed Sweetened", "spec": "24/14 OZ"}, {"code": "18035", "name": "Condensed Milk", "spec": "24/14 OZ"}, {"code": "18036", "name": "Shortening Fry Liquid Clear Zero Trans Fat", "spec": "1/35 LB"}, {"code": "18037", "name": "Oil Soybean Vegetable Pure", "spec": "1/25 LB"}, {"code": "18038", "name": "Salt Granulated Fine", "spec": "1/25 LB"}, {"code": "18039", "name": "OREO Chocolate Sandwich Cookies Small Cookie Pieces", "spec": "25 lb Box"}, {"code": "18040", "name": "Kirkland Signature Pure Sea Salt, Fine Grain,", "spec": "30 oz"}, {"code": "18041", "name": "Premium Creamer", "spec": "1/45 LBS"}, {"code": "18042", "name": "Mango Chunk LQF", "spec": "1/20 LB"}, {"code": "18043", "name": "Strawberry Iqf", "spec": "1/30 LB"}, {"code": "18044", "name": "Strawberry Whole Iqf", "spec": "1/30 LB"}, {"code": "18045", "name": "Strawberry Whole Iqf", "spec": "1/10 LB"}, {"code": "18047", "name": "Mango Chunk", "spec": "2/5 LB"}, {"code": "18048", "name": "Sugar Brown Light Cane", "spec": "1/25 LB"}, {"code": "18049", "name": "Sugar Granulated Extra Fine Cane", "spec": "1/25 LB"}, {"code": "18050", "name": "Sugar Brown Light Cane", "spec": "1/50 LB"}, {"code": "18051", "name": "Sugar Granulated Extra Fine Cane", "spec": "1/50 LB"}, {"code": "18052", "name": "Grapefruit Section ", "spec": "1/8 LB"}, {"code": "18053", "name": "Grapefruit Section No Preservatives", "spec": "1/8 LB"}, {"code": "18054", "name": "Wawona Mango Chunks", "spec": "10 lbs per box"}, {"code": "18055", "name": "Kirkland Signature Organic Strawberries", "spec": "4 lbs per box"}, {"code": "18056", "name": "Egg Shell Extra Large Aa Cage Free", "spec": "1/15 DZ"}, {"code": "18057", "name": "Vitamix Drive Socket Kit, Metal - 891", "spec": "1 CT"}, {"code": "18058", "name": "Nestle Coffee mate Original Powdered Coffee Creamer", "spec": "56 oz /can"}, {"code": "18059", "name": "Cookie Wafer Oreo 3 Inch", "spec": "670/EA"}, {"code": "18060", "name": "Cheese Cream Original Loaf", "spec": "6/3 LB"}, {"code": "18061", "name": "Lemon Choice Fresh", "spec": "1/140 CT"}, {"code": "18062", "name": "Grapefruit Ruby Red Fresh", "spec": "1/27 CT"}, {"code": "18063", "name": "Anthony's Organic Carob Powder,, Gluten Free, Non GMO, Cocoa Powder Alternative, Unsweetened", "spec": "1/ 1 lb"}, {"code": "18064", "name": "Cheese Cream Loaf", "spec": "10/3 LB"}, {"code": "18066", "name": "Avocado Hass Breaking Fresh", "spec": "1/60 CT"}, {"code": "18067", "name": "Egg Shell Extra Large White Aa Cage Free", "spec": "1/15 DZ"}, {"code": "18068", "name": "Lemon Choice Fresh", "spec": "1/165 CT"}, {"code": "18069", "name": "Avocado Hass Fresh", "spec": "1/24 CT"}, {"code": "18070", "name": "Avocado Hass Breaking Fresh", "spec": "1/48 CT"}, {"code": "18071", "name": "Grapefruit Ruby Red Fresh", "spec": "1/56 CT"}, {"code": "18072", "name": "Amazon Brand - Happy Belly, Sea Salt, Fine Ground, 1 pound", "spec": "1/1lb"}, {"code": "18073", "name": "Lemons", "spec": "165 Average ct"}, {"code": "18074", "name": "Tofu Firm Fresh", "spec": "12/19 OZ"}, {"code": "18075", "name": "Nissin Cup Noodles, Chicken Flavor 2.25 oz., 24 ct", "spec": "1/24 ct"}, {"code": "18076", "name": "Frozen Strawberry", "spec": "30Lbs/ctn"}, {"code": "18077", "name": "Topping Cookie Oreo Pieces Small", "spec": "24/16 OZ"}, {"code": "18078", "name": "Mango Cubed", "spec": "2/5 LB"}, {"code": "18079", "name": "Egg Shell White Cafe Free Grade A Large", "spec": "1/15 DZ"}, {"code": "18080", "name": "Strawberry Whole IQF", "spec": "2/5 LB"}, {"code": "18081", "name": "Salt Kosher Flake Coarse", "spec": "12/3 LB"}, {"code": "18082", "name": "Avocado Hass 2", "spec": "1/60 ctn"}, {"code": "18083", "name": "Milk Oat Barista", "spec": "12/32 OZ"}, {"code": "18084", "name": "Cheese Chedder Jack Feather Shredded", "spec": "4/5lb"}, {"code": "18085", "name": "OREO Chocolate Sandwich Cookies, 5.23 oz., 12 pk.", "spec": "1/12 pk"}, {"code": "18086", "name": "Milk Whole Homogenized", "spec": "4/1GAL"}, {"code": "18087", "name": "Egg Shell Large White Aa Cage Free", "spec": "1/15 dz"}, {"code": "18088", "name": "Grapefruit Ruby Red Fresh", "spec": "1/40 CT"}, {"code": "18089", "name": "Blueberry Fresh", "spec": "3/.5 PT"}, {"code": "18090", "name": "S.Pellegrino Sparkling Natural Mineral Water 16.9 fl.", "spec": "24bot/pk"}, {"code": "18091", "name": "Coconut Milk - THAI KITCHEN", "spec": "6 cans/ctn"}, {"code": "18092", "name": "Nabisco Oreo Cake Base Crumbs 35 lb.", "spec": "35LB/ctn"}, {"code": "18093", "name": "Yuzu MONIN Syrup", "spec": "1Lx4Bottles/ctn"}, {"code": "18094", "name": "Sago", "spec": "14oz/bag x 50 bag/ctn"}, {"code": "18095", "name": "Nestlé Coffee-mate Powdered Creamer, Original", "spec": "1 can"}, {"code": "18096", "name": "Banana Fresh Green Tip", "spec": "1/40LB"}, {"code": "18097", "name": "Grapefruit Ruby Red Fresh", "spec": "8/5 LB"}, {"code": "18098", "name": "Blueberries Fresh", "spec": "12/1PT"}, {"code": "18099", "name": "Sanitizer Hand Sterno Performance Forumula 1 Liter", "spec": "1/1 EA"}, {"code": "18100", "name": "Eggs", "spec": "ctn"}, {"code": "18101", "name": "Milk Almond Barista Plant Based", "spec": "12/32 oz"}, {"code": "18102", "name": "Eggs", "spec": "1/15dz"}, {"code": "18103", "name": "Fresh Lemon", "spec": "1/115ctn"}, {"code": "18104", "name": "Oil Olive Blend 90/10", "spec": "6/1 GAL"}, {"code": "18105", "name": "Morton Salt", "spec": "1"}, {"code": "18106", "name": "Milk Homogenized", "spec": "6/.5GAL"}, {"code": "18107", "name": "Evaporated Milk", "spec": "24pk/12oz"}, {"code": "18108", "name": "Avocado", "spec": "60CT/ctn"}, {"code": "18109", "name": "Oil Olive Canola Extra Virgin 90/10", "spec": "6/1 GAL"}, {"code": "18110", "name": "Banana Fresh Green Tip 10lb", "spec": "1/10LB"}, {"code": "18111", "name": "Thai Kitchen Organic Coconut Milk", "spec": "6 cans/ctn"}, {"code": "18112", "name": "Philadelphia Original Cream Cheese Spread, 16 oz., 2 pk.", "spec": "16 oz. each tub"}, {"code": "18113", "name": "Lemons, 3 lbs.", "spec": "3lbs/bag"}, {"code": "18114", "name": "Sago Ball", "spec": "14oz/ bag"}, {"code": "18115", "name": "Organic Spice Resource Turmeric Root Powder", "spec": "8 oz (226 g)/ Bag"}, {"code": "18116", "name": "Torani Pumpkin Spice Flavoring Syrup 750 mL Glass Bottle", "spec": "12 bottles /Case"}, {"code": "18117", "name": "Torani Puremade Syrup, Hazelnut Flavoring for Drinks", "spec": "25.4 Fl Oz/ Bottle"}, {"code": "18118", "name": "McCormick Ground Cinnamon", "spec": "2.37 oz/ bottle"}, {"code": "18119", "name": "Ferrero Rocher, Milk Chocolate Hazelnut Candy", "spec": "48 counts/packet"}, {"code": "18120", "name": "Nutella Hazelnut Spread with Cocoa", "spec": "33.5 oz/ bottle. 2 bottles/ pack"}, {"code": "18121", "name": "TORANI REAL FRUIT SMOOTHIE STRAWBERRY", "spec": "64oz/ bottle"}, {"code": "18122", "name": "Libby's 100% Pure Canned Pumpkin", "spec": "Unit: 6 cans/ Case"}, {"code": "18123", "name": "Ethen-Mango Syrup", "spec": "11lbs/ 4bottle/ ctn/"}, {"code": "18124", "name": "Chaokoh Coconut Milk", "spec": "24 cans/ctn"}, {"code": "18125", "name": "Dragonfly Sago", "spec": "50 bags/ctn"}, {"code": "18126", "name": "Nutella Hazelnut Spread with Cocoa, 26.5 oz., 2 pk.", "spec": "26.5 oz., 2 pk"}, {"code": "18127", "name": "Nescafé Taster's Choice House Blend Light-Medium Instant Coffee, 14 oz.", "spec": "14 oz."}, {"code": "18128", "name": "Redsun-Strawberry Syrup", "spec": "(1 CTN has 4 Bottles, 1 bottle is 5kg, $96 per CTN"}, {"code": "18129", "name": "Redsun-Mango Syrup", "spec": "(1 CTN has 4 Bottles, 1 bottle is 5kg, $96 per CTN"}, {"code": "18130", "name": "Salt Granulated Plain", "spec": "1 Case has 4 carton box"}, {"code": "18131", "name": "Chewy Tapioca Pearls (Boba)", "spec": "1 ctn is 6 bags"}, {"code": "18132", "name": "Strawberry Syrup", "spec": "1 ctn is 6 bottles"}, {"code": "18135", "name": "HERSHEY'S Caramel Syrup,", "spec": "22 Ounce per bottle"}, {"code": "18136", "name": "Himalayan Pink Salt", "spec": "Member's Mark Himalayan Pink Salt, 38 oz."}, {"code": "18137", "name": "Animal Cookies", "spec": "Members Mark Animal Cookies 2 oz., 36 pk"}, {"code": "18138", "name": "Torani Tiramisu Syrup", "spec": "750ml/bottle"}, {"code": "18139", "name": "Thai Tea Leaves", "spec": "13oz/bag"}, {"code": "18140", "name": "Member's Mark Boneless and Skinless Chicken Thighs, priced per pound", "spec": "6LB/PACKET"}, {"code": "18141", "name": "Kirkland Signature Frozen Strawberries, 6 lbs", "spec": " 6LB/Packet"}, {"code": "18142", "name": "Kirkland Signature Whole Milk, 1 Gallon, 2 ct", "spec": "2 bottles/packet"}, {"code": "18143", "name": "Monin Coconut Syrup", "spec": "Bottle (750mL)"}, {"code": "18144", "name": "Argo 100% Pure Corn Starch", "spec": " (16OZ/1LB)"}, {"code": "18145", "name": "Erawan Glutinous Rice Flour", "spec": " (16OZ/1LB)"}, {"code": "18146", "name": "Whipped Cream Dairy Topping", "spec": "Net WT 15oz (425g)"}, {"code": "18147", "name": "POTATO SWEET TATER PUFF", "spec": "6 pack/ 2.5 LB"}, {"code": "18148", "name": "Hot Water", "spec": "Hot Water"}, {"code": "18149", "name": "Potato Fry Sweet Waffle Waffle Battered", "spec": " 5/3 LB"}, {"code": "18150", "name": "Sauce Caramel Designer Dessert", "spec": "12-pack, 17 OZ"}, {"code": "19409", "name": "冰块", "spec": "5kg/袋"}, {"code": "210010002", "name": "Pearl boiling pot (16L)", "spec": "220V/2200W/10A/2kg(520W*520D*370H mm)"}, {"code": "210010013", "name": "PP cup for rock salt", "spec": "50pc*40tube/ctn"}, {"code": "210010014", "name": "PET Cover for rock salt", "spec": "100pcs*20tube/ctn"}, {"code": "210010019", "name": "16oz Plastic cup", "spec": "50pcs*20tube/ctn"}, {"code": "210010020", "name": "Jumbo cup", "spec": "50pcs*20tube/ctn"}, {"code": "210010021", "name": "Hot cup lids", "spec": "50pcs*20tube/ctn"}, {"code": "210010024", "name": "HL Transparent Cup Lids", "spec": "50pcs*20tube/ctn"}, {"code": "210010025", "name": "HL shape cover (for cup lids)", "spec": "1000pcs*50bags/ctn"}, {"code": "210010027", "name": "Plastic Cup (12g) Black Logo", "spec": "50pcs*20tube/ctn"}, {"code": "210010028", "name": "Plastic cup lids", "spec": "50pcs*20tube/ctn"}, {"code": "210010030", "name": "PP cup for rock salt (100c.c.)", "spec": "50pc*40tube/ctn"}, {"code": "210010033", "name": "HL Jumbo Cup (16g) New Logo", "spec": "50pcs*20tube/ctn"}, {"code": "210010035", "name": "PET Bottle 500ml", "spec": "100 sets/ctn"}, {"code": "210010036", "name": "海外版易拉罐", "spec": "200套/箱"}, {"code": "210010038", "name": "IP无底纹700 PP 膜内贴注塑杯", "spec": "500个/箱"}, {"code": "210010039", "name": "HL冷泡瓶（空白）", "spec": "200套/箱"}, {"code": "210010040", "name": "Injection Molded Cup", "spec": "25pcs/tube*20tube/ctn"}, {"code": "210010044", "name": "Plastic Cup Lid - Yellow Colour", "spec": "50pcs*20tube/ctn"}, {"code": "210010051", "name": "22oz Plastic Cup (22g) SD Version-1", "spec": "25pcs*20tube/ctn"}, {"code": "210010052", "name": "22oz Plastic Cup (22g) SD Version-2", "spec": "25pcs*20tube/ctn"}, {"code": "210010053", "name": "Jumbo Cup (16g) Black Logo", "spec": "50pcs*20tube/ctn"}, {"code": "210010073", "name": "Jumbo Cup (16g) -  Scale", "spec": "50pcs*20tube/ctn"}, {"code": "210010092", "name": "Paper cup lid (Clear)", "spec": "50pcs*20tube/ctn"}, {"code": "210010127", "name": "Plastic Cup 850ml", "spec": "25pcs*20tube/ctn"}, {"code": "210010128", "name": "Plastic Cup Lid (Panda Style)", "spec": "25pcs*20tube/ctn"}, {"code": "210010132", "name": "16oz Plastic Cup (15.5g) SD Version", "spec": "25pcs*20tube/ctn"}, {"code": "210010133", "name": "PP Cup Lids", "spec": "50pcs*20tube/ctn"}, {"code": "210010134", "name": "PET Bottle With Can", "spec": "650ml*100set/ctn"}, {"code": "210010135", "name": "16oz Plastic Cup (16.5g)", "spec": "25pcs*20tube/ctn"}, {"code": "210011004", "name": "110 Dia Plastic Cup(1000)-light it up", "spec": "20pcs*20tubes/ctn"}, {"code": "210011005", "name": "110 Dia Plastic Cup Lid", "spec": "100pcs*8tubes/ctn"}, {"code": "210011047", "name": "G90 Dome Lid", "spec": "50pcs/tube*20tube/ctn"}, {"code": "210011072", "name": "Zip-top Can (overseas version)", "spec": "200 sets/ctn"}, {"code": "210012016", "name": "HL3.0 Seal Matting Film 2112", "spec": "6 roll/ctn"}, {"code": "210012028", "name": "PE Seal Film (HL1.0)", "spec": "6 roll/ctn"}, {"code": "210012038", "name": "PE Seal Film - Light it up", "spec": "6roll/ctn"}, {"code": "210013015", "name": "Biodegradation 1 cup bag (19 Design)", "spec": "100pcs/bag*40bag/ctn"}, {"code": "210013016", "name": "Biodegradation 2 Cups Bag (19 Design)", "spec": "50pcs/bag*36bag/ctn"}, {"code": "210013017", "name": "Biodegradation 4 cups bag (19 Design)", "spec": "50pcs/bag*18bag/ctn"}, {"code": "210014006", "name": "Paper Cup (HL 2023)", "spec": "25pcs*20tube/ctn"}, {"code": "210014007", "name": "Paper Cup 22oz-Light it up(TW)", "spec": "50pcs/tube*20tube/ctn"}, {"code": "210014010", "name": "HL Paper Cup 2024 (Light it up)", "spec": "25 pcs/tube * 20 tubes/ctn"}, {"code": "210014045", "name": "Paper Cup (HL 2023)", "spec": "25pcs*20tube/ctn"}, {"code": "210014062", "name": "Bubble Waffle Cup(two-tone color)", "spec": "50pcs/bag*20bag/ctn"}, {"code": "210014065", "name": "Paper Cup (HL3.0 Version)", "spec": "25pcs*20tube/ctn"}, {"code": "210014068", "name": "Paper Cup 22oz (2022TW)", "spec": "50pcs/tube*20tube/ctn"}, {"code": "210014069", "name": "Paper Cup 16oz (2022TW)", "spec": "50pcs/tube*20tube/ctn"}, {"code": "210014070", "name": "Paper Cup 4oz", "spec": "50pcs/tube*40tube/ctn"}, {"code": "210014072", "name": "Bevel Cup - Paper", "spec": "50pcs*20tube/ctn"}, {"code": "210014075", "name": "Paper Cup (For Hot Drinks) UK Version", "spec": "25pcs/tube*20tube/ctn"}, {"code": "210014076", "name": "Paper Cup 22oz-Yellow Gradient", "spec": "50pcs/tube*20tube/ctn"}, {"code": "210014077", "name": "Paper Cup 16oz-Yellow Gradient", "spec": "50pcs/tube*20tube/ctn"}, {"code": "210014078", "name": "2.5oz Test cup", "spec": "50個 x 40條/箱"}, {"code": "210015011", "name": "HL Brand Tissue", "spec": "100pcs/bag*36bag/ctn"}, {"code": "210017001", "name": "4 Cups Paper Bag", "spec": "25pcs/bdle*10bdle/ctn"}, {"code": "210017003", "name": "Bubble Waffle Packing Bag", "spec": "300PCS/bag*10bags/ctn"}, {"code": "210017004", "name": "HL IP Two cup paper Bag（150g）", "spec": "25 pieces/bundle *16 bundles/ctn"}, {"code": "210017007", "name": " Paper Bag ( new design )", "spec": "300 pcs/bag * 10 bags/ctn"}, {"code": "210017030", "name": "Bubble Waffle Packing Bag (19 new design)(TX)", "spec": "300pcs*10bag/ctn"}, {"code": "210017031", "name": "2 Cups Paper Bag", "spec": "25pcs/bdle*16bdle/ctn"}, {"code": "210017051", "name": "Four-cup paper bag (overseas version)", "spec": "25 PCs/bundle * 10 bundles/box"}, {"code": "210017052", "name": "Two-cup paper bag (overseas version)", "spec": "25 PCs/bundle * 16 bundles/box"}, {"code": "210018013", "name": "8*210mm  straw(poly individual pack)", "spec": "250pcs*14bag/ctn"}, {"code": "210018015", "name": "PLA Straw 8mm*21cm", "spec": "700pcs/bag*5bag/ctn"}, {"code": "210018016", "name": "PLA Straw 12mm*21cm", "spec": "400pcs/bag*5bag/ctn"}, {"code": "210018019", "name": "12mm*21cm sago straw(poly individual pack)(PP)", "spec": "125pcs*18bag/ctn"}, {"code": "210018020", "name": "12mm*25cm sago straw(poly individual pack)(PP)", "spec": "100pcs*30bag/ctn"}, {"code": "210018021", "name": "12mm*30cm sago straw(poly individual pack)(PP)", "spec": "100pcs*25bag/ctn"}, {"code": "210018023", "name": "Paper Straw 8*210mm", "spec": "100pcs*40bag/ctn"}, {"code": "210018024", "name": "Paper Straw 12*210mm", "spec": "50pcs*40bag/ctn"}, {"code": "210018033", "name": "PP 12mm*280mm Straw", "spec": "100pcs*20bag/ctn"}, {"code": "210018038", "name": "Paper Straw 12*210mm", "spec": "50pcs*40bag/ctn"}, {"code": "210099001", "name": "外賣袋1號(無印刷)", "spec": "5kg/bdle(about 790pcs)"}, {"code": "210099008", "name": "Two Cups Paper  Pulp Holder", "spec": "L22*W11cm；600pcs/ctn"}, {"code": "210099010", "name": "Four Cups Paper  Pulp Holder", "spec": "L23*W23cm；300pcs/ctn"}, {"code": "210099011", "name": "HL Sticker", "spec": "200pcs/bag*30bag/ctn"}, {"code": "210099012", "name": "Scratch Card", "spec": "200pcs/bag*75bag/ctn"}, {"code": "210099019", "name": "PET Four Cups Holder", "spec": "50pcs*20bag/ctn"}, {"code": "210099020", "name": "PET Two Cups Holder", "spec": "100pcs*20bag/ctn"}, {"code": "210099021", "name": "Four-cup holder (brown)", "spec": "100個/包*20包/箱"}, {"code": "210099022", "name": "Two cup holders (brown)", "spec": "(125pc x 20tube/ctn)"}, {"code": "210110032", "name": "Ceramic Coaster - Cheers Design", "spec": "陶瓷吸水杯墊-乾杯款"}, {"code": "210110033", "name": "Ceramic Coaster - Happy Everyday Design", "spec": "陶瓷吸水杯墊-飛機款"}, {"code": "210112009", "name": "Stainless Picter Serve W/Cover", "spec": "2L"}, {"code": "210112013", "name": "Dining Spoon", "spec": "西餐湯更 (#8040-04)"}, {"code": "210112015", "name": "Topping Spoon", "spec": "連柄小漏杓"}, {"code": "210112016", "name": "Cheese Spoon", "spec": "岩鹽芝士杓"}, {"code": "210112017", "name": "Bar Spoon", "spec": "調理棒"}, {"code": "210112018", "name": "tea strainer", "spec": "濾網茶隔"}, {"code": "210112019", "name": "mesh strainer", "spec": "濾網(細)"}, {"code": "210112021", "name": "Stainless steel mesh basin", "spec": "密孔漏盆"}, {"code": "210112023", "name": "Can opener", "spec": "開罐器"}, {"code": "210112024", "name": "Whisk 14Inch", "spec": "粗線打蛋器-14吋"}, {"code": "210112025", "name": "Ice tongs", "spec": "小冰夾"}, {"code": "210112026", "name": "Stainless steel Chopsticks", "spec": "不銹鋼筷"}, {"code": "210112027", "name": "Milk Pot 1000ml", "spec": "奶鋼杯-1000ml"}, {"code": "210112028", "name": "Milk Pot 2000ml", "spec": "奶鋼杯-2000ml"}, {"code": "210112029", "name": "Milk Pot 600ml", "spec": "奶鋼杯-600ml"}, {"code": "210112031", "name": "Whisk 18 inch", "spec": "粗線打蛋器-18吋"}, {"code": "210112032", "name": "Tea Bucket", "spec": "10L/pc"}, {"code": "210112034", "name": "Chopsticks barrel", "spec": "不銹鋼圓形筷子套(5)"}, {"code": "210112036", "name": "Dedicated grapefruit spoon", "spec": "葡萄柚專用湯匙"}, {"code": "210112037", "name": "Ice Scoop", "spec": "大冰鏟(不鏽鋼)"}, {"code": "210112038", "name": "Scissors", "spec": "剪刀"}, {"code": "210112039", "name": "Knife", "spec": "刀"}, {"code": "210112040", "name": "Cream scraper", "spec": "奶油刮刀"}, {"code": "210112041", "name": "Salt can", "spec": "鹽罐"}, {"code": "210112042", "name": "Fruit Squeezer", "spec": "榨汁機(不鏽鋼)"}, {"code": "210112047", "name": "80 mesh tea strainer", "spec": "80目不銹鋼製茶桶用濾網"}, {"code": "210112048", "name": "STAINLESS STEEL TEA BUCKET (yi)", "spec": "不銹鋼保溫冷茶桶10L       (1個/箱)"}, {"code": "210112049", "name": "Topping Spoon(WZ-A006)", "spec": "連柄小漏勺(WZ-A006)"}, {"code": "210112053", "name": "Syrup Dispenser-Single", "spec": "醬料分配器-單槽"}, {"code": "210112058", "name": "Stainless Steel Tongs 30CM", "spec": "不銹鋼夾 30CM"}, {"code": "210112059", "name": "Stainless Steel Tongs 40CM", "spec": "不銹鋼夾 40CM"}, {"code": "210112060", "name": "Stainless Mixing Pan (Round)", "spec": "鹹酥雞水杓 C01"}, {"code": "210112061", "name": "Stainless Mixing Pan (Sqvare)", "spec": "鹽酥雞畚斗 C01"}, {"code": "210112065", "name": "150 mesh tea strainer", "spec": "150目"}, {"code": "210112066", "name": "Stainless steel pot 24*24", "spec": "24*24"}, {"code": "210112067", "name": "Stainless steel pot 28* 28", "spec": "28*28"}, {"code": "210112069", "name": "Mask", "spec": "12/個/盒"}, {"code": "210112070", "name": "pearl sago spoon", "spec": "6.5CM"}, {"code": "210112071", "name": "Bubble Waffle Cone Basket Holder", "spec": "pc"}, {"code": "210112072", "name": "Stainless Steel O-Ring Holder", "spec": "pc"}, {"code": "210112075", "name": "Pepper Can (M)", "spec": "7CM H11.7CM(+-5%)"}, {"code": "210112077", "name": "Stainless Steel Pan With Grill", "spec": "40*29*4.8cm"}, {"code": "210112078", "name": "U-Stainless Steel Thermos Cup", "spec": "300ml(Matte Yellow)"}, {"code": "210112079", "name": "Stainless Straw Holder", "spec": "120*H138mm"}, {"code": "210113008", "name": "Bamboo Skewer Sticks 5\"", "spec": "800g/bag"}, {"code": "210113009", "name": "Bamboo Skewer Sticks 6.6\" 20cm", "spec": "800g/bag"}, {"code": "210115003", "name": "Lid for Gastronorm Container-Material PC (Size：1/3)", "spec": "YM-0430"}, {"code": "210115004", "name": "Gastronorm Container-Material PC (Size：1/3)", "spec": "YM-0429；325*176*150mm"}, {"code": "210115005", "name": "Lid for Gastronorm Container-Material PC (Size：1/6)", "spec": "YM-0108"}, {"code": "210115006", "name": "Gastronorm Container-Material PC (Size：1/6)", "spec": "YM-0106；176*162*150mm"}, {"code": "210115007", "name": "(IP) AS Water Bottle 650 VS", "spec": "15pcs/ctn"}, {"code": "210115012", "name": "HL亚克力吊牌组合", "spec": "1000组/包*10包/箱"}, {"code": "210115013", "name": "HL Water Botte AS-650NM", "spec": "15pcs/ctn"}, {"code": "210115018", "name": "powder spoon", "spec": "奶粉匙"}, {"code": "210115019", "name": "sugar spoon", "spec": "糖匙"}, {"code": "210115020", "name": "Plastic Shaker-1000ml", "spec": "1000cc雪克杯(YM-0160)"}, {"code": "210115022", "name": "Jigger", "spec": "安司杯"}, {"code": "210115024", "name": "(for Tea Bucket use)5000ml measuring cup", "spec": "量杯-5000ml"}, {"code": "210115025", "name": "2000ml measuring cup", "spec": "量杯-2000ml"}, {"code": "210115026", "name": "Plastic Chopping", "spec": "塑膠粘板"}, {"code": "210115027", "name": "1/4 teaspoon", "spec": "1/4茶匙"}, {"code": "210115028", "name": "Plastic Sauces Bottle", "spec": "大抗菌調味瓶"}, {"code": "210115030", "name": "(Ice Cube) 300ml measuring cup", "spec": "12oz 定量杯-冰勺"}, {"code": "210115031", "name": "4000ml measuring cup", "spec": "量杯4000ml"}, {"code": "210115032", "name": "Water Jug", "spec": "保溫壺"}, {"code": "210115034", "name": "100ml Measuring Cup", "spec": "量杯-100ml"}, {"code": "210115036", "name": "Tea Bucket parts- fauceet", "spec": "保溫茶桶水龍頭零件組"}, {"code": "210115039", "name": "Plastic 200cc Measuring Cup Embossed", "spec": "LF200cc量水杯"}, {"code": "210115040", "name": "(Tea) 200ml measuring cup", "spec": "塑膠製"}, {"code": "210115042", "name": "Plastic shaker 750ml", "spec": "750ml"}, {"code": "210115043", "name": "Crisper#3", "spec": "3號"}, {"code": "210115044", "name": "(Tea) 500ml measuring cup", "spec": "塑膠製"}, {"code": "210116012", "name": "Squeezer", "spec": "pc"}, {"code": "210117003", "name": "Bar Shelf Liners", "spec": "312mm x 470mm"}, {"code": "210117004", "name": "Bar Mats", "spec": "80mm x 585mm"}, {"code": "220010003", "name": "Automatic Beverage-Vending Machine", "spec": "W600*D700*H980mm"}, {"code": "220010005", "name": "Bubble Waffle Machine", "spec": "HK-2008A/1400W/220V/50Hz"}, {"code": "220010006", "name": "1.5-meter Model -lBeverage Dispenser 【 3.0】", "spec": "set"}, {"code": "220010007", "name": "Seal machine ATT-601", "spec": "pc"}, {"code": "220010020", "name": "Automatic can sealing machine", "spec": "Taiwan"}, {"code": "220011008", "name": "Electronic Thermometer", "spec": "電子防水溫度計"}, {"code": "220011009", "name": "timer", "spec": "計時器"}, {"code": "220012002", "name": "Steam Machine", "spec": "SW-611 CE approved  (one steam, one hot water 220V)"}, {"code": "220012017", "name": "Seal Machine", "spec": "pc"}, {"code": "220012018", "name": "Ice Cream Machine Style No：Taylor-708", "spec": "TAYLOR-708桌上型霜淇淋機"}, {"code": "220012019", "name": "Electronic Scales (large)", "spec": "30kg/1g"}, {"code": "220012020", "name": "Electronic Scales (small)", "spec": "6kg/0.5g"}, {"code": "220012021", "name": "TANITA Electronic Scales KD160", "spec": "2kg/1g"}, {"code": "220012022", "name": "Sealing Machine", "spec": "90口径"}, {"code": "220012023", "name": "Sugar Dispenser", "spec": "800W, 110W, 250W*340D*420H mm"}, {"code": "220012025", "name": "Sealing Machine", "spec": "350W, 110V, 250W*240D*640Hmm"}, {"code": "220012026", "name": "Sugar Dispener", "spec": "80W, 110W , 250W*360D*420Hmm"}, {"code": "220012030", "name": "Steam Machine SW-611 UL approved  (one steam, one hot water)", "spec": "蒸氣加熱機SW-611, UL認證(1蒸氣/1熱水 220V)"}, {"code": "220012031", "name": "Tea Brewer", "spec": "功率:6350W, 電源:220V-240V,50/60HZ,1ph"}, {"code": "220012042", "name": "Sugar Dispenser motor 110V", "spec": "ET-9EU"}, {"code": "220013004", "name": "94轉90封口機圈圈", "spec": "個"}, {"code": "220013005", "name": "洩壓閥，3公斤", "spec": "TB-0318-25-01"}, {"code": "220013006", "name": "安全閥，7公斤", "spec": "TB-0318-25"}, {"code": "220013010", "name": "Frame For Tea Strainer", "spec": "濾茶器底座"}, {"code": "220013011", "name": "加熱器3000W", "spec": "TB-0311"}, {"code": "220013012", "name": "灑水/清洗電磁閥，NSF", "spec": "TB-0302"}, {"code": "220013013", "name": "電磁閥200V(熱水/排水)，NSF", "spec": "044-0204"}, {"code": "220013014", "name": "固態繼電器SSR-25DA", "spec": "TB-0406"}, {"code": "220013015", "name": "過熱保護器110ﾟC(CR-7T1)", "spec": "TB-0320"}, {"code": "220013016", "name": "Parts For Tea Brewer - Sprayer Hrad", "spec": "TB-0203"}, {"code": "220013017", "name": "Ice Creamer Machine Parts - Squeezing Nozzle", "spec": "個"}, {"code": "220013018", "name": "Components for the Model -lBeverage Dispenser 【 3.0】", "spec": "套"}, {"code": "220013025", "name": "Heating Plate 110V-DM0482 (Part For Sealing Machine)", "spec": "DM0482"}, {"code": "220013026", "name": "Heating Wire 110V-DB1796 (Part For Sealing Machine)", "spec": "DB1796"}, {"code": "220013027", "name": "Sensor (Part For Sealing Machine)", "spec": "DB2753"}, {"code": "220013028", "name": "Spring (Part For Sealing Machine)", "spec": "DB3277 (NSF/CUL)"}, {"code": "220013029", "name": "Electric Heat Spring (Part For Sealing Machine)", "spec": "DB2977 (NSF/CUL)"}, {"code": "220013030", "name": "P.C. Board For Sugar Dispenser ET-9EU", "spec": "DC2910 (NSF/CUL)"}, {"code": "220013031", "name": "Plastic Safety Lock Switch For Water Tank Lid", "spec": "TB-0414"}, {"code": "220013032", "name": "PC Board For Tea Brewer", "spec": "TB-0401-T"}, {"code": "220013033", "name": "Touch Sensor Panel (LCD & Display Board Included)", "spec": "TB-0401-04-T"}, {"code": "220013047", "name": "Waffle Maker Plate", "spec": "10pcs/ctn"}, {"code": "220099002", "name": "1.2 Meter TEDIA Model-1 Beverage Dispenser 3.0", "spec": "120cm*150cm*180cm / 220V / 800-1500W"}, {"code": "220099003", "name": "1.5-meter Model -lBeverage Dispenser 【 3.0】", "spec": "1500*800*1550mm"}, {"code": "220099005", "name": "Brix meter", "spec": "測糖計(0-80度)"}, {"code": "220099009", "name": "1.5-meter Model -lBeverage Dispenser 【 3.0】（induding  Components）", "spec": "set"}, {"code": "220099010", "name": "1.5-meter Model -lBeverage Dispenser 【 3.0】（Shipping-Disclaimer version）", "spec": "set"}, {"code": "220110002", "name": "造型抽屜版", "spec": "人造皮製把手、人造皮製四角封邊+銅錨釘"}, {"code": "220110004", "name": "Happy Lemon Doll", "spec": "檸檬公仔娃娃"}, {"code": "220110006", "name": "FRP Doll-Hawaii Design", "spec": "檸檬公仔娃娃-夏威夷風情"}, {"code": "220110007", "name": "FRP Doll-Texas Design", "spec": "檸檬公仔娃娃-德州牛仔"}, {"code": "220110008", "name": "FRP Doll-Arizona Version", "spec": "檸檬公仔娃娃-ARIZONA"}, {"code": "220110011", "name": "Bar Counter", "spec": "2500*800*1330(m/m)"}, {"code": "230011001", "name": "效期貼紙", "spec": "40mm*30mm;1000pcs/roll*5bag/ctn"}, {"code": "230011017", "name": "HLbrand sticker(35mm*25mm/pc,1000pcs/rol", "spec": "熱感貼紙35mm*25mm,正面一色印刷/每箱100入/外箱尺寸：41*35*21公分"}, {"code": "230013001", "name": "Blue LemonBoy Keychain", "spec": "100pcs/bag,5bags/ctn"}, {"code": "230013002", "name": "Purple LemonBoy Keychain", "spec": "100pcs/bag,5bags/ctn"}, {"code": "230013010", "name": "Key Chain-Happy Lemon Logo", "spec": "壓克力鑰匙圈-妹妹頭"}, {"code": "230013011", "name": "Key Chain-Cute Lemon", "spec": "壓克力鑰匙圈-萌Q"}, {"code": "230013012", "name": "Happy Lemon acrylic name badge", "spec": "壓克力"}, {"code": "230013013", "name": "Happy Lemon Platenumber plate(100pcs/set", "spec": "100個/套"}, {"code": "230015035", "name": "Lemonhead cup stopper (PP)", "spec": "1000pcs*50bags/ctn"}, {"code": "230099001", "name": "Inflatable Balloon Lemon Boy - Sport (without battery)", "spec": "Nylon"}, {"code": "230099002", "name": "Happy Lemon Pillow", "spec": "20*16cm"}, {"code": "230099003", "name": "Cup Sleeve", "spec": "100pcs/bag*5bag/箱"}, {"code": "230099015", "name": "Gift Card", "spec": "100pcs/box"}, {"code": "230099022", "name": "LemonBoy Vinyl Figure 35cm", "spec": "1pc/box × 6boxes/ctn"}, {"code": "230110001", "name": "珠滴茶垢咖啡垢去除劑", "spec": "1KG*6"}, {"code": "230111001", "name": "長毛抹布(白色)", "spec": "30cm*30cm"}, {"code": "240020014", "name": "Adult Tshirt SS Pc56-Dark Navy-S", "spec": "Dark Navy-S"}, {"code": "240020015", "name": "Adult Tshirt SS Pc56-Dark Navy-M", "spec": "Dark Navy-M"}, {"code": "240020016", "name": "Adult Tshirt SS Pc56-Dark Navy-L", "spec": "Dark Navy-L"}, {"code": "240020017", "name": "Adult Tshirt SS Pc56-Dark Navy-XL", "spec": "Dark Navy-XL"}, {"code": "240020018", "name": "Adult Tshirt SS Pc56-Dark Navy-2XL", "spec": "Dark Navy-2XL"}, {"code": "240020019", "name": "Adult Tshirt SS Pc56-Maroon-S", "spec": "Maroon-S"}, {"code": "240020020", "name": "Adult Tshirt SS Pc56-Maroon-M", "spec": "Maroon-M"}, {"code": "240020021", "name": "Adult Tshirt SS Pc56-Maroon-L", "spec": "Maroon-L"}, {"code": "240020022", "name": "Adult Tshirt SS Pc56-Maroon-XL", "spec": "Maroon-XL"}, {"code": "240020023", "name": "Adult Tshirt SS Pc56-Maroon-2XL", "spec": "Maroon-2XL"}, {"code": "240020028", "name": "Yellow Color T-Shirt (S) ( for staff)", "spec": "環保紗吸排-S(衣長66胸圍47)"}, {"code": "240020029", "name": "Yellow Color T-Shirt (M) ( for staff)", "spec": "環保紗吸排-M(衣長70胸圍51)"}, {"code": "240020030", "name": "Yellow Color T-Shirt (L) ( for staff)", "spec": "環保紗吸排-L(衣長73胸圍54)"}, {"code": "240020031", "name": "Yellow Color T-Shirt (XL) ( for staff)", "spec": "環保紗吸排-XL(衣長76胸圍57)"}, {"code": "240020032", "name": "Yellow Color T-Shirt (XXL) ( for staff)", "spec": "環保紗吸排-XXL(衣長78胸圍61)"}, {"code": "240020033", "name": "Grey Color T-Shirt (S) ( for supervisor)", "spec": "環保紗吸排-S(衣長66胸圍47)"}, {"code": "240020034", "name": "Grey Color T-Shirt (M) ( for supervisor)", "spec": "環保紗吸排-M(衣長70胸圍51)"}, {"code": "240020035", "name": "Grey Color T-Shirt (L) ( for supervisor)", "spec": "環保紗吸排-L(衣長73胸圍54)"}, {"code": "240020036", "name": "Grey Color T-Shirt (XL) ( for supervisor)", "spec": "環保紗吸排-XL(衣長76胸圍57)"}, {"code": "240020037", "name": "Grey Color T-Shirt (XXL) ( for supervisor)", "spec": "環保紗吸排-XXL(衣長78胸圍61)"}, {"code": "240027005", "name": "Black Cap (Happy Lemon Logo Embroidered)", "spec": "斜紋/網布-繡花一式(9.4cm)"}, {"code": "240028006", "name": "Black Apron (Happy Lemon Logo Embroidered)", "spec": "單層烏利-繡花一式(12cm)"}, {"code": "240031002", "name": "Polyester Cotton Bag A", "spec": "250pcs/ctn"}, {"code": "240031003", "name": "Polyester Cotton Bag B", "spec": "250pcs/ctn"}, {"code": "240031008", "name": "Tote (Material：Canvas， Style：A)", "spec": "37*32*10cm"}, {"code": "240031009", "name": "Tote (Material：Canvas， Style：B)", "spec": "37*32*10cm"}, {"code": "240031010", "name": "Tote (Material：Canvas， Style：C)", "spec": "37*32*10cm"}, {"code": "28001", "name": "4 Ounce Portion Cup", "spec": "15/200 CT"}, {"code": "28002", "name": "4 Ounce Portion Cup Lids", "spec": "20/120CT"}, {"code": "28003", "name": "Towel Roll", "spec": "6/800FT"}, {"code": "28004", "name": "Napkin Disposable Xpressnap Natural", "spec": "12/500 CT"}, {"code": "28005", "name": "Label Roll Product 1 Inch X 2 Inch Dissolvable", "spec": "1/500 CT"}, {"code": "28006", "name": "Towel Multifold Advanced White 2-ply", "spec": "16/189CT"}, {"code": "28007", "name": "Tissue Bath 2 Ply 3.75 Wrapped White", "spec": "80/550 CT"}, {"code": "28008", "name": "Cup Paper Hot Insulated 12 Ounce", "spec": "20/50 CT"}, {"code": "28009", "name": "Lid Plastic White Dome for 10-24 Ounce", "spec": "10/100 CT"}, {"code": "28010", "name": "Napkin Beverage 2ply 9.8x9.8 White", "spec": "6/500 CT"}, {"code": "28011", "name": "Napkin Beverage 1 Ply 9.5x9.5 White", "spec": "8/500 CT"}, {"code": "28012", "name": "Cup Plastic Portion Black 2 Ounce", "spec": "12/200 CT"}, {"code": "28013", "name": "Lid Plastic Clear for 1.5-2.5 Ounch Portion ", "spec": "24/100 CT"}, {"code": "28014", "name": "Tissue Toilet Complete 360 High Capacity", "spec": "12/1700 CT"}, {"code": "28015", "name": "Towel Multifold Natural 9.5 Inch X 9.125 Inch", "spec": "16/250 CT"}, {"code": "28016", "name": "Towel Roll Complete 360 Natural 8", "spec": "3/1150 FT"}, {"code": "28017", "name": "Towel Multifold 9.4 Inch X 9.2 Inch Natural 1 Ply", "spec": "16/250 CT"}, {"code": "28018", "name": "Tissue Toilet Advanced Bath Tissue 2-ply White Wrapped", "spec": "80/500 CT"}, {"code": "28019", "name": "Plastic Film Pvc", "spec": "1/18IN"}, {"code": "28020", "name": " 1/8 x 230 Thermal Paper Receipt Rolls", "spec": "1/50 ct"}, {"code": "28021", "name": "Pacific Blue Ultra 8” High-Capacity Recycled Paper Towel Roll", "spec": "6 Rolls Per Case"}, {"code": "28022", "name": "UPC Barcode & Address Labels 2\" x 1.5\"", "spec": "1/16ct"}, {"code": "28023", "name": "Member's Mark Ultra Premium 2-Ply Toilet Paper", "spec": "1/45ct"}, {"code": "28024", "name": "Towel Terry Cloth Microfiber Yellow", "spec": "12/16CT"}, {"code": "28025", "name": "Opener Can Manual Steel Rubber Handle Black", "spec": "1/1 EA"}, {"code": "28026", "name": "Foil Aluminum Roll Heavy Weight 500 Feet", "spec": "1/18 IN"}, {"code": "28027", "name": "Pad Scrub Stainless 50 Gram 1.75 Ounce", "spec": "1/12 CT"}, {"code": "28028", "name": "Sponge Cellulose With Medium Green Pad", "spec": "20/EA"}, {"code": "28029", "name": "Liner Trash 40 Inch X 46 Inch 1.1 Mil Clear", "spec": "125/40-45G"}, {"code": "28030", "name": "Bag Plastic Low Density Reclosable 2 Gallon 13 Inch X 15.5 Inch 1.75 Mil", "spec": "1/100CT"}, {"code": "28031", "name": "Spoon Plastic White Medium-Heavy Medium-Length", "spec": "1/1000CT"}, {"code": "28032", "name": "Bag Plastic T-shirt 11.5x6.5x21 \"thank You\"", "spec": "1/1000CT"}, {"code": "28033", "name": "Liner Roll Trash 24 Inch X 24 Inch 6 Micron Natural", "spec": "1000/8-10G"}, {"code": "28034", "name": "Liner Trash 24 Inch X 32 Inch 0.35 Mil Black", "spec": "500/12-16G"}, {"code": "28035", "name": "Liner Trash Reprocessed 40 Inch X 46 Inch 1.5 Mil Black", "spec": "100/40-45G"}, {"code": "28036", "name": "Tray Paper Pulp Carry Out 4 Cup", "spec": "300/8-32 OZ"}, {"code": "28037", "name": "Bag Shirt Comportable 18.5 Inch X 12.9 Inch Green", "spec": "1/500 CT"}, {"code": "28038", "name": "Bag Paper Brown 12 Pound", "spec": "1/500 CT"}, {"code": "28039", "name": "Liner Roll Trasg 33 Inch X 44 Inch 0.9 Mil Black", "spec": "100/32 GAL"}, {"code": "28040", "name": "Liner Trash 33 Inch X 39 Inch 0.9 Mil White ", "spec": "100/32 GAL"}, {"code": "28041", "name": "Bag Paper Brown 8 Pound", "spec": "1/500 CT"}, {"code": "28042", "name": "Amazon Basics Tall Kitchen Drawstring Trash Bags, 13 Gallon, 120 Count, Pack of 1", "spec": "1/120 CT"}, {"code": "28043", "name": "Label Maker Machine with Tape, P21 Bluetooth Label Printer", "spec": "1/1 ea"}, {"code": "28044", "name": "P21 Label Maker Tape, 14x40mm", "spec": "1/1 ct"}, {"code": "28045", "name": "100 Pack Clear Plastic Bags 2 Cup Beverage Carrier Drink Holder", "spec": "1/100ct"}, {"code": "28046", "name": "Aluf Plastics Heavy Duty 55 Gallon Trash Bags", "spec": "1/50 ct"}, {"code": "28047", "name": "Heavy Duty Scrub Sponges Kitchen 24 Count", "spec": "1/24ct"}, {"code": "28048", "name": "6 Pack Small Digital Kitchen Timer Magnetic", "spec": "1/6 ct"}, {"code": "28049", "name": "Amazon Basics AAA Alkaline High-Performance Batteries, 1.5 Volt, 10-Year Shelf Life, 36 count ", "spec": "1/36ct"}, {"code": "28050", "name": "Comfy Package [100 Pack] Heavyweight Clear Plastic Forks", "spec": "1/100ct"}, {"code": "28051", "name": "Comfy Package [100 Pack] Basic Disposable Plastic Spoons", "spec": "1/100ct"}, {"code": "28052", "name": "Ultra-Purewhip N2O Cream Chargers - 8g Premium Stainless Steel Whipped Cream Charger Cartridges", "spec": "1/50 ct"}, {"code": "28053", "name": "EXPO Vis-a-Vis Wet Erase Marker Set, Fine Tip, Assorted Colors", "spec": "8 CT"}, {"code": "28054", "name": "Ziploc Easy Open Tab Sandwich Bags, 580 ct", "spec": "1/580ct"}, {"code": "28055", "name": "Kirkland Signature Microfiber Towels, Yellow", "spec": "36 ct"}, {"code": "28056", "name": "Vital International Solutions Beverage Carrier, 4 Cup", "spec": "300 ct"}, {"code": "28057", "name": "Dixie Ultra Paper Bowl", "spec": "135 ct"}, {"code": "28058", "name": "Ziploc Grip 'n Seal Sandwich Bags", "spec": "580 ct"}, {"code": "28059", "name": "Foil Aluminum Roll Standard Weight 1000 Feet", "spec": "580 ct"}, {"code": "28060", "name": "Film Pvc Chloride 2000 Feet Roll Slide Cutter", "spec": "580 ct"}, {"code": "28061", "name": "Cleaner Degreaser Concentrate Ready To Use", "spec": "4/1 GAL"}, {"code": "28062", "name": "Kirkland Signature Food Wrap Stretch-Tite Premium", "spec": "1/1 ea"}, {"code": "28063", "name": "Puro Caff - 20 Ounce - Espresso Machine Cleaner Cleaning Powder", "spec": "1/20 OZ"}, {"code": "28064", "name": "Kirkland Signature Aluminum Foil, 12\"W x 1000'L", "spec": "CTN"}, {"code": "28065", "name": "Kirkland Signature Stretch-Tite Plastic Food Wrap, 11-7/8\"L x 750'W", "spec": "2 ct"}, {"code": "28066", "name": "Glove Nitrile Foodservice Powder Free Black Medium", "spec": "10/100 CT"}, {"code": "28067", "name": "Liner Trash 55 X 58", "spec": "100/60GAL"}, {"code": "28068", "name": "Glove Nitrile Large Black Foodservice Powder Free", "spec": "10/100 CT"}, {"code": "28069", "name": "\"Glove Nitrile Foodservice Powder Free Black Small", "spec": "10/100 CT"}, {"code": "28070", "name": "Glove Vinyl Foodservice Powder Free Large", "spec": "10/100 CT"}, {"code": "28071", "name": "Cover Toilet Seat Disposable", "spec": "4/250 CT"}, {"code": "28072", "name": "Glove Vinyl Foodservice Powder Free Extra Large", "spec": "10/100 CT"}, {"code": "28073", "name": "Stirrer Coffee Wood 7.5 Inch", "spec": "5/1000 CT"}, {"code": "28074", "name": "Glove Poly Embossed Foodservice Medium", "spec": "4/500 CT"}, {"code": "28075", "name": "Glove Vinyl Foodservice Powder Free Medium", "spec": "10/100 CT"}, {"code": "28076", "name": "Bleach Liquid Germicidal Ultra 6%", "spec": "6/128OZ"}, {"code": "28077", "name": "Detergent Pot And Pan Liquid Green Ready To Use", "spec": "4/1 GAL"}, {"code": "28078", "name": "Soap Hand Liquid Pink Ready To Use", "spec": "4/1 GAL"}, {"code": "28079", "name": "Cleaner Floor Neutral Dispenser", "spec": "1/2.5 GAL"}, {"code": "28080", "name": "Mop Head Wet Medium Cotton Blend Yarn Blue 18\" Length", "spec": "1/12 CT"}, {"code": "28081", "name": "Detergent Pot and Pan Liquid Pink Ready To Use", "spec": "4/1 GAL"}, {"code": "28082", "name": "Sanitizer Multiple Quaternary Liquid Dispenser", "spec": "2/1 GAL"}, {"code": "28083", "name": "Sanitizer Oasis 146 Multi Quat", "spec": "1/2.5 GAL"}, {"code": "28084", "name": "Soap Hand Antibacterial Foam Advanced ", "spec": "4/750 ML"}, {"code": "28085", "name": "Bleach Liquid Germicidal Ultra 6%", "spec": "6/120 OZ"}, {"code": "28086", "name": "Detergent Pot/pan Liquid Lavender", "spec": "2/1 GAL"}, {"code": "28087", "name": "Softsoap Liquid Hand Soap, Fresh Breeze - 7.5 Fl Oz (Pack of 6)", "spec": "1/6 ct"}, {"code": "28088", "name": "Windex Original Glass Cleaner, 1 spray bottle + 128 fl. oz.", "spec": "1/1 ea"}, {"code": "28089", "name": "Mop Loop End 17 Oz Blue", "spec": "1/EA"}, {"code": "28090", "name": "Handle Brush Broom Squeegee Blue", "spec": "1/EA"}, {"code": "28091", "name": "Label Roll Shelf Life Dissolvable 2\" X 2\"", "spec": "1/750 CT"}, {"code": "28092", "name": "Detergent Pot And Pan Liquid Blue Ready To Use", "spec": "2/ 1 GAL"}, {"code": "28093", "name": "Bag Paper Brown Kraft Grocery 12 Pound", "spec": "1/500 CT"}, {"code": "28094", "name": "Pad Scrub Stainless 35 Gram 1.25 Ounce", "spec": "6/12 CT"}, {"code": "28095", "name": "Handle Mop Quik Release Yel", "spec": "1/60 IN"}, {"code": "28096", "name": "Freshener Air Eco Mango", "spec": "1/6 CT"}, {"code": "28097", "name": "Pad Soap Steel Wool Hotel Size", "spec": "12/10 CT"}, {"code": "28098", "name": "Sleeve Paper Kraft 12, 16, 20 Ounce", "spec": "1/1200 CT"}, {"code": "28099", "name": "Mop Head Cotton Medium Cut End 24 Ounce", "spec": "1/3 CT"}, {"code": "28100", "name": "Cleaner Glass Blue Ready To Use", "spec": "4/1 GAL"}, {"code": "28101", "name": "Liner Trash 40 Inch X 46 Inch 0.95 Mil White", "spec": "100/40-45G"}, {"code": "28102", "name": "Liner Trash 43 Inch X 47 Inch 0.9 Mil Black", "spec": "100/56 GAL"}, {"code": "28103", "name": "Liner Roll Trash Compostable 42 Inch X 48 Inch 1 Mil Green Painted", "spec": "100/56 GAL"}, {"code": "28104", "name": "Liner Roll Trash Compostable 28 Inch X 45 Inch 1 Mil Green Painted", "spec": "125/33 GAL"}, {"code": "28105", "name": "Cleaner Glass Blue Ready To Use", "spec": "4/32 OZ"}, {"code": "28106", "name": "Cleaner Liquid Vigoroso Lavender Multi Surface Ready To Use", "spec": "4/32 OZ"}, {"code": "28107", "name": "Glove Vinyl Food Service Powder Free Medium", "spec": "10/100 CT"}, {"code": "28108", "name": "Cup Plastic Portion Translucent 2 Ounce", "spec": "12/200 CT"}, {"code": "28109", "name": "Bag Plstic T Shirt 12 X 7 X 22 Reuse", "spec": "1/200 CT"}, {"code": "28110", "name": "Soap Hand Antibacterial Foam Nexa Advance", "spec": "4/750ML"}, {"code": "28111", "name": "Urnex Espresso Machine Cleaning Powder - 566 grams - Cafiza", "spec": "1 CT"}, {"code": "28112", "name": "Pine-Sol Multi-Surface Cleaner , 80 Fl Oz, Pack of 3", "spec": "4 CT"}, {"code": "28113", "name": "Whaline 1000 Count Handle Drinking Bags 2 Cups, 11 x 12.2 Inch", "spec": "1/1000 CT"}, {"code": "28114", "name": "Sponge Scrubber Stainless Steel 50g", "spec": "1/1 EA"}, {"code": "28115", "name": "Lid Plastic Clear for 1.5-2.5 Ounce Portion", "spec": "24/100 ct"}, {"code": "28116", "name": "Liner Roll Trash 33 Inch X 44 Inch 0.9 Mil Bla", "spec": "100/32 gal"}, {"code": "28117", "name": "Tissue Toilet Jumb0 Mini-Standard 2 Ply", "spec": "12/751 ft"}, {"code": "28118", "name": "Detergent Liquid Presoak 2-in-1", "spec": "4/1GAL"}, {"code": "28119", "name": "Member's Mark Microfiber Towels, 16\" x 16\", 36 ct., Choose Color", "spec": "36ct."}, {"code": "28120", "name": "Member's Mark Commercial Blue Dish Detergent, 1 Gallon Jugs", "spec": "4/1GAL"}, {"code": "28121", "name": "Scotch-Brite Heavy Duty Scrub Sponges, Individually Wrapped 24 ct.", "spec": "24ct."}, {"code": "28122", "name": "Scotch-Brite Stainless Steel Extra Large Scrubbers,16 ct.", "spec": "16ct."}, {"code": "28123", "name": "T-Shirt Carry-Out Bags, 11.5\" x 6.5\" x 22\" 1,000 ct.", "spec": "24bot/pk"}, {"code": "28124", "name": "Member's Mark Nitrile Exam Gloves Small", "spec": "200ct."}, {"code": "28125", "name": "Member's Mark Nitrile Exam Gloves Large", "spec": "200ct."}, {"code": "28126", "name": "Member's Mark Aloe Vera Moisturizing Hand Soap, 80 fl. oz.", "spec": "2bot/ctn"}, {"code": "28127", "name": "Freshener Air Eco Cucumber Melon", "spec": "1/6 CT"}, {"code": "28128", "name": "Unitex 100% Cotton Towel, White, 14 in x 17 in, 52-count", "spec": "52 count/pk"}, {"code": "28129", "name": "Febreze Air Mist Odor-Fighting Air Freshener, Variety Pack", "spec": "4-count/pk"}, {"code": "28130", "name": "3M Scotch Magic Tape/Gift Wrap Tape,  Total,", "spec": "6 count/pk"}, {"code": "28131", "name": "Commercial Hand Soap", "spec": "4 bottles/ctn 1box=1bbottle"}, {"code": "28132", "name": "Monin Banana Syrup", "spec": "750ml/bottle"}, {"code": "28133", "name": "Cleanser Powder Oxy Bleach Ready-to-use", "spec": "12//21oz"}, {"code": "28134", "name": "White Napkins", "spec": "12/500 CT"}, {"code": "28135", "name": "Trash Bag 38x 58", "spec": "100/60GAL"}, {"code": "28136", "name": "Thermal Paper  3-1/8 Inch", "spec": "50/1EA"}, {"code": "28137", "name": "Aluminum foil", "spec": "1 roll/ 18 IN"}, {"code": "28138", "name": "Toilet Seat Cover", "spec": "4/ 250 counts"}, {"code": "28139", "name": "Clear Plastic Cups", "spec": "100/5oz"}, {"code": "28140", "name": "Test Strip Sanitizer Chlorine", "spec": "1/100 ctn"}, {"code": "28141", "name": "Plastic Cup (water cups)", "spec": "15/57 CT"}, {"code": "28142", "name": "Member's Mark Microfiber Towels, 16\" x 16\", 36 ct., Blue", "spec": "36ct."}, {"code": "28143", "name": "Label Roll Universal Plastic 2 Inch x 3 Inch", "spec": "1/500CT"}, {"code": "28144", "name": "Cleaner Floor Neutral Oasis-100", "spec": "1/2.5 gal"}, {"code": "28145", "name": "Liner Trash 55 Inch X 58 Inch 1.5 Mil Black", "spec": "100/65 GAL"}, {"code": "28146", "name": "Bag Plastic T Shirt 15x7x26 Thank You", "spec": "100/65 GAL"}, {"code": "28147", "name": "Scotch Double Sided Tape, Clear, 1/2\" x 500\", 6 Dispensers", "spec": "6ct/1pk"}, {"code": "28148", "name": "2018 16 oz Plastic Cup 12 G, Medium, PP Cup", "spec": "50pc*20tube/ctn"}, {"code": "28149", "name": "V2025-01 (Blue-A Little Happy)", "spec": "1/50"}, {"code": "28150", "name": "V2025-02 (Yellow-Full of Zest)", "spec": "1/50"}, {"code": "28151", "name": "V2025-03 (Holiday Edition)", "spec": "1/50"}, {"code": "28152", "name": "Film Pvc Chloride Roll 2000 Feet Slide Cutter", "spec": "1/18in"}, {"code": "28153", "name": "Member's Mark Nitrile Exam Gloves, Medium, 200 ct.", "spec": "200 gloves/box"}, {"code": "28154", "name": "SodaStream CO2 Gas Carbonation Bundle | 3x 60L QuickConnect Cylinders, Pink CQC System - Never run out of CO2 Again - Compatible with Terra, ART, Aqua Fizz, E-Terra, E-DUO, Enso and Gaia", "spec": "1 Bundler = 3 Bottles"}, {"code": "28156", "name": "Bunnykitty Blind Box", "spec": "Blind Box with 3 Types of Keychain"}, {"code": "28157", "name": "2-cup Isolation Togo Bag", "spec": "ctn"}, {"code": "28158", "name": "4-cup Isolation Togo Bag", "spec": "ctn"}, {"code": "28159", "name": "Aprons (Local made)", "spec": "unit is piece"}, {"code": "28160", "name": "Heating Pad for Waffle Machine (大中華)", "spec": "unit is piece"}, {"code": "28161", "name": "Induction Cooker (local Brand: Mai Cook)", "spec": "unit is piece"}, {"code": "28163", "name": "Holder Cup Karat 2 Cup Molded Fiber Holder for 8 to 24 Ounce Cups, Brown (600 Pack)", "spec": "600/2 CT 6043981"}, {"code": "28164", "name": "Absorbency Pockets, Compact Case", "spec": "250 Sheets/Pack"}, {"code": "28165", "name": "V2026-01 (Blue-SPOIL YOURSELF)", "spec": "1盒50張"}, {"code": "28166", "name": "V2026-02 (Blue-YOU CRUSHED IT)", "spec": "1盒50張"}, {"code": "28167", "name": "Pail Sanitizing Red 6 Qt", "spec": "1/6 QT"}, {"code": "28168", "name": "Strip Test Sanitizer Quat-40", "spec": " 1/15' RL"}, {"code": "28169", "name": "Pail Plastic Detergent Green", "spec": " 1/6 QT"}, {"code": "28170", "name": "7L定制料盒", "spec": "个"}, {"code": "28171", "name": "2.5L定制料盒", "spec": "个"}, {"code": "28172", "name": "料仓单向阀", "spec": "个"}, {"code": "28173", "name": "密封快插", "spec": "个"}, {"code": "28174", "name": "料盒垫片", "spec": "个"}, {"code": "5003", "name": "Royalty Fee", "spec": "特许权使用费"}, {"code": "5004", "name": "加盟费收入", "spec": "加盟费收入"}, {"code": "5005", "name": "catering revenue", "spec": "catering revenue"}, {"code": "5006", "name": "Service Fee", "spec": "服务费收入"}, {"code": "5007", "name": "平台服务费", "spec": "服务费收入"}, {"code": "5008", "name": "POS Commission Revenue", "spec": "POS Commission Revenue"}, {"code": "5009", "name": "Promotion fee", "spec": "產品推廣費"}, {"code": "5012", "name": "預收收入", "spec": "預收收入"}, {"code": "5014", "name": "late fee", "spec": "late fee"}, {"code": "5015", "name": "TCPOS Gift Card Sale", "spec": "TCPOS Gift Card Sale"}, {"code": "5016", "name": "New Gift Store Incentive", "spec": "New Gift Store Incentive"}, {"code": "5017", "name": "TCPOS Gift Card Revenue", "spec": "New Gift Redeem (TCPOS gift card revenue)"}, {"code": "5018", "name": "Reward Point Issue", "spec": "Points-Add  (reward Pint Issue)"}, {"code": "5019", "name": "Reward Points Redeem", "spec": "(Reward) Points-Redeem "}, {"code": "5020", "name": "Revel Gift Card Revenue", "spec": "Revel Gift Card Revenue"}, {"code": "5021", "name": "TCPOS Gift Card Card Fee", "spec": "TCPOS Gift Card Card Fee"}, {"code": "5022", "name": "shipping fee", "spec": "shipping fee"}, {"code": "5023", "name": "Revenue from sales of equipment", "spec": "Revenue from sales of equipment"}, {"code": "5024", "name": "Beverage Machine Rental", "spec": "Beverage Machine Rental"}, {"code": "5025", "name": "Security Deposit", "spec": "Security Deposit"}, {"code": "5027", "name": "tip income", "spec": "tip income"}, {"code": "5028", "name": "sales tax", "spec": "sales tax"}, {"code": "5029", "name": "charge back", "spec": "charge back"}, {"code": "5030", "name": "Payment on behalf of others", "spec": "Payment on behalf of others"}, {"code": "5031", "name": "Transfer service Fee", "spec": "Transfer service Fee"}, {"code": "5032", "name": "Management Fee", "spec": "Management Fee"}, {"code": "5033", "name": "Discounts主營業務收入-折扣-貿易", "spec": "Discounts主營業務收入-折扣-貿易"}, {"code": "5034", "name": "Old Gift Card Revenue", "spec": "Old Gift Card Revenue"}, {"code": "HLT001OA01A001LI", "name": "Classsic Milk Tea", "spec": "Cup"}, {"code": "HLT001OA01B001LI", "name": "Jasmine Green Tea with Salted Cheese", "spec": "Cup"}, {"code": "HLT001OA01B002LI", "name": "Black Tea with Salted Cheese", "spec": "Cup"}, {"code": "HLT001OA01B003LI", "name": "Milk Tea with Salted Cheese", "spec": "Cup"}, {"code": "HLT086IA23BA001XL", "name": "蜜桃乌龙水果桶", "spec": "杯"}, {"code": "HLT086IA23BA002XL", "name": "芒果百香水果桶", "spec": "杯"}, {"code": "HLT086IA24AC051LS", "name": "草莓蛋糕布丁冰沙", "spec": "杯"}, {"code": "HLT086IA24AC051MS", "name": "草莓蛋糕布丁冰沙", "spec": "杯"}, {"code": "HLT086IA24AC052LS", "name": "梔子草莓饮", "spec": "杯"}, {"code": "HLT086IA24AC052MS", "name": "梔子草莓饮", "spec": "杯"}, {"code": "HLT086IA24AC057MS", "name": "珍快乐一号", "spec": "杯"}, {"code": "HLT086IA24AC058MS", "name": "珍快乐二号", "spec": "杯"}, {"code": "HLT086IA24AC060MS", "name": "心想事橙", "spec": "杯"}, {"code": "HLT086IA24AC061LS", "name": "橙意满满冰沙", "spec": "杯"}, {"code": "HLT086IA24AC061MS", "name": "橙意满满冰沙", "spec": "杯"}, {"code": "HLT086IA24AC062MS", "name": "发财水", "spec": "杯"}, {"code": "MISC", "name": "運費或雜項", "spec": "運費或雜項"}, {"code": "Note1", "name": "Note1", "spec": "Note1"}]</script>
+<script id="sample-invoice" type="application/json">["WHLFCLS CREAM HEAVY WHIPPING 36% ESL", "WHLFCLS MILK HOMOGENIZED", "SYS CLS CHICKEN CVP THIGH BNLS SKLS", "SYS REL MANGO CHUNK IQF", "SYS CLS STRAWBERRY WHL IQF", "CASACLS MILK CONDENSED SWEETENED", "SYS CLS SHORTENING FRY CANOLA CLR", "SYS CLS SUGAR GRANULATED XFINE CANE", "SYS CLS GLOVE NITRILE FDSRV PF BLK", "TORKUNV NAPKIN DISP XPRESSNP NAT", "IMPFRSH GARLIC PEELED FRESH", "IMPFRSH GRAPEFRUIT SECTION LT GRPFRTSECLTPRE"]</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+(function(){
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // ---------- PDF line extraction ----------
+  const BOILERPLATE_EXACT = new Set([
+    'ITEM DESCRIPTION','GROUP TOTAL','SUBTOTAL','SUB TOTAL','TAX TOTAL','INVOICE TOTAL',
+    'ORDER SUMMARY','MISC CHARGES','REMIT TO','DRIVER SIGN','CUST SIGNED','NO PCS',
+    'CASES SPLIT','OPEN CLOSE','CONT ON PAGE','LAST PAGE','PAYABLE ON OR BEFORE',
+    'EQUAL OPPORTUNITY','IMPORTANT PACA PROVISION','PURCHASE ORDER','DELV DATE',
+    'TRUCK STOP','CUSTOMER INVOICE NUMBER','CONFIDENTIAL PROPERTY'
+  ]);
+  const BOILERPLATE_CONTAINS = [
+    'GROUP TOTAL','SUBTOTAL','SUB TOTAL','INVOICE TOTAL','TAX TOTAL','PACA PROVISION',
+    'STATUTORY TRUST','PERISHABLE AGRICULTURAL','RETAINS A TRUST','RECEIVABLES OR PROCEEDS',
+    'REPRESENTATIVE CAPACITY','ANY DISPUTE','MANIFEST','MA:','MANIFEST#','ROUTE',
+    'PAYABLE ON','REMIT TO','SIGNED:','TIME:','DRIVER','CUST.SIGNED','EQUAL OPPORTUNITY',
+    'AFFRIMATIVE ACTION','CFR 60','SERVICE CHARGE','PAST DUE BALANCES','NORMAL DELIVERY',
+    'ROLLING','CONT. ON PAGE','GROSS WT','TOT.PCS','CUBE','DESCRIPTION',
+    "CUSTOMER'S INVOICE",'CONFIDENTIAL PROPERTY','TRUCK STOP','DELV. DATE','CUSTOMER INVOICE'
+  ];
+
+  function isBoilerplate(line){
+    const upper = line.toUpperCase().trim();
+    if(!upper) return true;
+    if(BOILERPLATE_EXACT.has(upper)) return true;
+    for(const kw of BOILERPLATE_CONTAINS){
+      if(upper.includes(kw)) return true;
+    }
+    return false;
+  }
+
+  function qualifies(tok){
+    if(/[A-Za-z]/.test(tok)) return true;
+    if(/^\d+%$/.test(tok)) return true;
+    return false;
+  }
+
+  function longestRun(line){
+    const toks = line.split(/\s+/).filter(Boolean);
+    let best = [], current = [];
+    for(const t of toks){
+      if(qualifies(t)){
+        current.push(t);
+        if(current.length > best.length) best = current.slice();
+      } else {
+        current = [];
+      }
+    }
+    return best;
+  }
+
+  function looksLikeRealText(runTokens){
+    if(runTokens.length < 2) return false;
+    const wordCount = runTokens.filter(w => /[A-Za-z]/.test(w)).length;
+    if(wordCount < 2) return false;
+    const singleChar = runTokens.filter(w => w.length === 1).length;
+    if(singleChar / runTokens.length > 0.3) return false;
+    const avgLen = runTokens.reduce((s, w) => s + w.length, 0) / runTokens.length;
+    if(avgLen < 2.5) return false;
+    return true;
+  }
+
+  async function extractLinesFromPdf(file){
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const lines = [];
+    for(let p = 1; p <= pdf.numPages; p++){
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const byY = new Map();
+      content.items.forEach(item => {
+        const y = Math.round(item.transform[5]);
+        const x = item.transform[4];
+        if(!byY.has(y)) byY.set(y, []);
+        byY.get(y).push({ x, str: item.str });
+      });
+      const ys = Array.from(byY.keys()).sort((a, b) => b - a);
+      ys.forEach(y => {
+        const parts = byY.get(y).sort((a, b) => a.x - b.x);
+        const lineStr = parts.map(pp => pp.str).join(' ').replace(/\s+/g, ' ').trim();
+        if(lineStr) lines.push(lineStr);
+      });
+    }
+    return lines;
+  }
+
+  const HEADER_CELL_STOPLIST = new Set([
+    'DESCRIPTION','ITEM DESCRIPTION','PRODUCT','PRODUCT NAME','PRODUCT DESCRIPTION',
+    'ITEM NAME','NAME','ITEM','ITEM DESC','MATERIAL','MATERIAL NAME','MATERIAL DESCRIPTION'
+  ]);
+
+  async function extractLinesFromSpreadsheet(file){
+    const isCsv = /\.csv$/i.test(file.name);
+    let workbook;
+    if(isCsv){
+      const text = await file.text();
+      workbook = XLSX.read(text, { type: 'string' });
+    } else {
+      const buf = await file.arrayBuffer();
+      workbook = XLSX.read(buf, { type: 'array' });
+    }
+    const lines = [];
+    workbook.SheetNames.forEach(sheetName => {
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      rows.forEach(row => {
+        const cells = row.map(c => String(c).trim()).filter(Boolean);
+        if(!cells.length) return;
+        let bestCell = '', bestScore = -1;
+        cells.forEach(c => {
+          const letters = (c.match(/[A-Za-z\u4e00-\u9fff]/g) || []).length;
+          if(letters > bestScore){ bestScore = letters; bestCell = c; }
+        });
+        if(bestScore < 3) return;
+        if(HEADER_CELL_STOPLIST.has(bestCell.toUpperCase())) return;
+        lines.push(bestCell);
+      });
+    });
+    return lines;
+  }
+
+  function isSpreadsheetFile(file){
+    return /\.(csv|xlsx|xls)$/i.test(file.name);
+  }
+
+  async function handlePdfFiles(files){
+    const pdfStatus = document.getElementById('pdfStatus');
+    const pdfErr = document.getElementById('pdfErr');
+    pdfErr.classList.remove('show');
+    pdfStatus.textContent = 'Reading ' + files.length + ' file' + (files.length > 1 ? 's' : '') + '…';
+    try{
+      let allCandidates = [];
+      for(const file of files){
+        if(isSpreadsheetFile(file)){
+          const lines = await extractLinesFromSpreadsheet(file);
+          allCandidates = allCandidates.concat(lines);
+          continue;
+        }
+        const rawLines = await extractLinesFromPdf(file);
+        rawLines.forEach(line => {
+          if(isBoilerplate(line)) return;
+          const runTokens = longestRun(line);
+          if(looksLikeRealText(runTokens)){
+            allCandidates.push(runTokens.join(' '));
+          }
+        });
+      }
+      // de-dupe consecutive identical lines
+      allCandidates = allCandidates.filter((l, i) => l !== allCandidates[i - 1]);
+      const invoiceInput = document.getElementById('invoiceInput');
+      invoiceInput.value = allCandidates.join('\n');
+      invoiceInput.dispatchEvent(new Event('input'));
+      pdfStatus.textContent = 'Extracted ' + allCandidates.length + ' candidate line' + (allCandidates.length === 1 ? '' : 's') + ' — review below before matching.';
+    }catch(e){
+      pdfStatus.textContent = '';
+      pdfErr.textContent = 'Could not read that file (' + (e.message || 'unknown error') + '). Try pasting the lines by hand instead.';
+      pdfErr.classList.add('show');
+    }
+  }
+
+  document.getElementById('pdfInput').addEventListener('change', (e) => {
+    if(e.target.files && e.target.files.length){
+      handlePdfFiles(Array.from(e.target.files));
+    }
+  });
+
+  const DEFAULT_LIST = JSON.parse(document.getElementById('erp-data').textContent);
+  const SAMPLE_LINES = JSON.parse(document.getElementById('sample-invoice').textContent);
+
+  let erpList = DEFAULT_LIST;
+  let usingStoredList = false;
+
+  const listStatusEl = document.getElementById('listStatus');
+  const invoiceInput = document.getElementById('invoiceInput');
+  const lineCountEl = document.getElementById('lineCount');
+  const matchBtn = document.getElementById('matchBtn');
+  const sampleBtn = document.getElementById('sampleBtn');
+  const resultsPanel = document.getElementById('resultsPanel');
+  const resultsBody = document.getElementById('resultsBody');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const copyMsg = document.getElementById('copyMsg');
+  const listInput = document.getElementById('listInput');
+  const updateListBtn = document.getElementById('updateListBtn');
+  const resetListBtn = document.getElementById('resetListBtn');
+  const listMsg = document.getElementById('listMsg');
+  const listErr = document.getElementById('listErr');
+
+  function setListStatus(){
+    listStatusEl.textContent = erpList.length + ' products loaded' + (usingStoredList ? ' (saved list)' : '');
+  }
+
+  async function loadStoredList(){
+    try{
+      const res = await window.storage.get('erp_list_v1', false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        if(Array.isArray(parsed) && parsed.length){
+          erpList = parsed;
+          usingStoredList = true;
+        }
+      }
+    }catch(e){
+      // no stored list yet, keep default
+    }
+    setListStatus();
+  }
+
+  async function saveList(list){
+    try{
+      await window.storage.set('erp_list_v1', JSON.stringify(list), false);
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+
+  // ---------- matching ----------
+  function normalize(s){
+    return (s || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9%\u4e00-\u9fff ]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function tokens(s){
+    return normalize(s).split(' ').filter(Boolean);
+  }
+
+  function tokenDice(aTokens, bTokens){
+    if(!aTokens.length || !bTokens.length) return 0;
+    const setA = new Set(aTokens);
+    const setB = new Set(bTokens);
+    let inter = 0;
+    setA.forEach(t => { if(setB.has(t)) inter++; });
+    return (2 * inter) / (setA.size + setB.size);
+  }
+
+  function bigrams(s){
+    const clean = s.replace(/\s+/g, '');
+    const arr = [];
+    for(let i = 0; i < clean.length - 1; i++) arr.push(clean.substr(i, 2));
+    return arr;
+  }
+
+  function bigramDice(a, b){
+    const A = bigrams(a), B = bigrams(b);
+    if(!A.length || !B.length) return 0;
+    const counts = {};
+    B.forEach(bg => counts[bg] = (counts[bg] || 0) + 1);
+    let matches = 0;
+    A.forEach(bg => {
+      if(counts[bg] > 0){ matches++; counts[bg]--; }
+    });
+    return (2 * matches) / (A.length + B.length);
+  }
+
+  // precompute normalized fields for erp list
+  function prepList(list){
+    return list.map(item => {
+      const normName = normalize(item.name);
+      return {
+        code: item.code,
+        name: item.name,
+        spec: item.spec || '',
+        normName: normName,
+        tok: tokens(item.name)
+      };
+    });
+  }
+
+  let prepared = prepList(erpList);
+
+  function rankMatches(line){
+    const lineTok = tokens(line);
+    const lineNorm = normalize(line);
+    const scored = prepared.map(item => {
+      const td = tokenDice(lineTok, item.tok);
+      const bd = bigramDice(lineNorm, item.normName);
+      const score = 0.62 * td + 0.38 * bd;
+      return { code: item.code, name: item.name, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 5);
+  }
+
+  function confClass(score){
+    if(score >= 0.55) return { cls: 'conf-high', label: 'High' };
+    if(score >= 0.32) return { cls: 'conf-med', label: 'Medium' };
+    return { cls: 'conf-low', label: 'Low' };
+  }
+
+  let lastResults = []; // {line, candidates, chosenIdx}
+
+  function renderResults(){
+    resultsBody.innerHTML = '';
+    lastResults.forEach((r, i) => {
+      const tr = document.createElement('tr');
+
+      const tdLine = document.createElement('td');
+      tdLine.className = 'invoice-line';
+      tdLine.textContent = r.line;
+      tr.appendChild(tdLine);
+
+      const chosen = r.candidates[r.chosenIdx];
+
+      const tdName = document.createElement('td');
+      tdName.className = 'match-name';
+      tdName.textContent = chosen ? chosen.name : '(no match)';
+      tr.appendChild(tdName);
+
+      const tdCode = document.createElement('td');
+      tdCode.className = 'erp-code';
+      tdCode.textContent = chosen ? chosen.code : '—';
+      tr.appendChild(tdCode);
+
+      const tdConf = document.createElement('td');
+      if(chosen){
+        const c = confClass(chosen.score);
+        const badge = document.createElement('span');
+        badge.className = 'conf ' + c.cls;
+        badge.textContent = c.label + ' · ' + Math.round(chosen.score * 100) + '%';
+        tdConf.appendChild(badge);
+
+        if(r.candidates.length > 1){
+          const sel = document.createElement('select');
+          sel.className = 'alt';
+          sel.style.marginTop = '6px';
+          sel.style.display = 'block';
+          r.candidates.forEach((cand, idx) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = cand.code + ' — ' + cand.name;
+            if(idx === r.chosenIdx) opt.selected = true;
+            sel.appendChild(opt);
+          });
+          sel.addEventListener('change', (e) => {
+            lastResults[i].chosenIdx = parseInt(e.target.value, 10);
+            renderResults();
+          });
+          tdConf.appendChild(sel);
+        }
+      } else {
+        tdConf.textContent = '—';
+      }
+      tr.appendChild(tdConf);
+
+      resultsBody.appendChild(tr);
+    });
+    resultsPanel.style.display = lastResults.length ? 'block' : 'none';
+  }
+
+  function runMatch(){
+    const raw = invoiceInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+    if(!raw.length){
+      lastResults = [];
+      renderResults();
+      return;
+    }
+    lastResults = raw.map(line => ({
+      line: line,
+      candidates: rankMatches(line),
+      chosenIdx: 0
+    }));
+    renderResults();
+  }
+
+  function updateLineCount(){
+    const n = invoiceInput.value.split('\n').map(l => l.trim()).filter(Boolean).length;
+    lineCountEl.textContent = n ? n + ' line' + (n === 1 ? '' : 's') : '';
+  }
+
+  invoiceInput.addEventListener('input', updateLineCount);
+  matchBtn.addEventListener('click', runMatch);
+  sampleBtn.addEventListener('click', () => {
+    invoiceInput.value = SAMPLE_LINES.join('\n');
+    updateLineCount();
+    runMatch();
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = lastResults.map(r => {
+      const c = r.candidates[r.chosenIdx];
+      return (c ? c.code : '') + '\t' + (c ? c.name : '') + '\t' + r.line;
+    }).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      copyMsg.classList.add('show');
+      setTimeout(() => copyMsg.classList.remove('show'), 2200);
+    });
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const header = 'ERP Code,Matched Product,Invoice Line\n';
+    const rows = lastResults.map(r => {
+      const c = r.candidates[r.chosenIdx];
+      const esc = (s) => '"' + String(s || '').replace(/"/g, '""') + '"';
+      return [esc(c ? c.code : ''), esc(c ? c.name : ''), esc(r.line)].join(',');
+    }).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'erp_matches.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  updateListBtn.addEventListener('click', async () => {
+    listMsg.classList.remove('show');
+    listErr.classList.remove('show');
+    const raw = listInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+    if(!raw.length){
+      listErr.textContent = 'Paste at least one row first.';
+      listErr.classList.add('show');
+      return;
+    }
+    const parsed = [];
+    for(const line of raw){
+      const parts = line.includes('\t') ? line.split('\t') : line.split(',');
+      if(parts.length < 2){
+        listErr.textContent = 'Could not read this line: "' + line + '". Use "code, name" per line.';
+        listErr.classList.add('show');
+        return;
+      }
+      const code = parts[0].trim();
+      const name = parts.slice(1).join(',').trim();
+      if(!code || !name) continue;
+      parsed.push({ code, name, spec: '' });
+    }
+    if(!parsed.length){
+      listErr.textContent = 'No valid rows found.';
+      listErr.classList.add('show');
+      return;
+    }
+    erpList = parsed;
+    prepared = prepList(erpList);
+    usingStoredList = true;
+    setListStatus();
+    const ok = await saveList(erpList);
+    listMsg.textContent = ok
+      ? 'List replaced (' + parsed.length + ' products) and saved for next time.'
+      : 'List replaced (' + parsed.length + ' products) for this session — saving failed, so it may reset next time.';
+    listMsg.classList.add('show');
+    listInput.value = '';
+  });
+
+  resetListBtn.addEventListener('click', async () => {
+    erpList = DEFAULT_LIST;
+    prepared = prepList(erpList);
+    usingStoredList = false;
+    setListStatus();
+    await saveList(erpList);
+    listMsg.textContent = 'Reset to the original 724-item list.';
+    listMsg.classList.add('show');
+    listErr.classList.remove('show');
+  });
+
+  loadStoredList().then(() => {
+    prepared = prepList(erpList);
+  });
+  setListStatus();
+})();
+</script>
+</body>
+</html>
